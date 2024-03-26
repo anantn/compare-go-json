@@ -95,46 +95,43 @@ func simdjsonFileManySmall(b *testing.B) {
 }
 
 func simdjsonFileManyLarge(b *testing.B) {
-	// On larger files such as the 5GB file used for a large file (not that
-	// large really) simdjson apparently attempts to pull the whole file into
-	// memory and which causes an out of memory error or kills the
-	// application.
-	benchErr = errors.New("out of memory")
-	b.Fail()
-	/*
-		f := openLargeLogFile()
-		defer func() { _ = f.Close() }()
+	// simdjson will keep reading from the file until the rc stream blocks.
+	f := openLargeLogFile()
+	defer func() { _ = f.Close() }()
 
-		b.ResetTimer()
-
-		for n := 0; n < b.N; n++ {
-			// simdjson closes the chan when done parsing so a new one has to be
-			// created on each parse.
-			done := make(chan bool)
-			rc := make(chan simdjson.Stream, 1000)
-			go func() {
-				cnt := 0
-				for {
-					v := <-rc
-					cnt++
-					if v.Error != nil {
-						if v.Error != io.EOF {
-							benchErr = v.Error
-							b.Fail()
-						}
-						break
-					}
-					if benchErr = simdjsonExtract(v.Value); benchErr != nil {
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		// simdjson closes the chan when done parsing so a new one has to be
+		// created on each parse.
+		done := make(chan bool)
+		rc := make(chan simdjson.Stream)
+		reuse := make(chan *simdjson.ParsedJson)
+		go func() {
+			cnt := 0
+			for {
+				v := <-rc
+				cnt++
+				if v.Error != nil {
+					if v.Error != io.EOF {
+						benchErr = v.Error
 						b.Fail()
 					}
+					break
 				}
-				done <- true
-			}()
-			_, _ = f.Seek(0, 0)
-			simdjson.ParseNDStream(f, rc, nil)
-			<-done
-		}
-	*/
+				if benchErr = simdjsonExtract(v.Value); benchErr != nil {
+					b.Fail()
+				} else {
+					go func() {
+						reuse <- v.Value
+					}()
+				}
+			}
+			done <- true
+		}()
+		_, _ = f.Seek(0, 0)
+		simdjson.ParseNDStream(f, rc, reuse)
+		<-done
+	}
 }
 
 func simdjsonExtract(pj *simdjson.ParsedJson) (err error) {
