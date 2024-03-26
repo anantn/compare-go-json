@@ -94,6 +94,7 @@ func main() {
 		&jsoniterPkg,
 		&simdjsonPkg,
 		&gjsonPkg,
+		&sonicPkg,
 	}
 	for _, s := range []*suite{
 		{fun: "parse", title: "Parse string/[]byte to simple go types ([]interface{}, int64, string, etc)", ref: "json"},
