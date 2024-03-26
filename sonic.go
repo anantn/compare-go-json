@@ -3,9 +3,9 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
-	"io"
 	"log"
 	"os"
 	"testing"
@@ -125,14 +125,10 @@ func sonicFileManySmall(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		j, _ := io.ReadAll(f)
-		dec := sonic.ConfigDefault.NewDecoder(bytes.NewReader(j))
-		for {
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
 			var data interface{}
-			if !dec.More() {
-				break
-			}
-			if err := dec.Decode(&data); err != nil {
+			if err := sonic.UnmarshalString(scanner.Text(), &data); err != nil {
 				benchErr = err
 				b.Fail()
 			}
@@ -147,13 +143,10 @@ func sonicFileManyLarge(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		dec := sonic.ConfigDefault.NewDecoder(f)
-		for {
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
 			var data interface{}
-			if !dec.More() {
-				break
-			}
-			if err := dec.Decode(&data); err != nil {
+			if err := sonic.UnmarshalString(scanner.Text(), &data); err != nil {
 				benchErr = err
 				b.Fail()
 			}
