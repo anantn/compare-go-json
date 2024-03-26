@@ -107,6 +107,8 @@ func jsoniterFile1(b *testing.B) {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
 	}
 	defer func() { _ = f.Close() }()
+
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		dec := jsoniter.NewDecoder(f)
