@@ -34,7 +34,7 @@ func sonicUnmarshal(b *testing.B) {
 
 	var result interface{}
 	for n := 0; n < b.N; n++ {
-		if benchErr = sonic.UnmarshalString(string(sample), &result); benchErr != nil {
+		if benchErr = sonic.Unmarshal(sample, &result); benchErr != nil {
 			b.Fail()
 		}
 	}
@@ -71,7 +71,7 @@ func sonicUnmarshalPatient(b *testing.B) {
 
 	var patient Patient
 	for n := 0; n < b.N; n++ {
-		if benchErr = sonic.UnmarshalString(string(sample), &patient); benchErr != nil {
+		if benchErr = sonic.Unmarshal(sample, &patient); benchErr != nil {
 			b.Fail()
 		}
 	}
@@ -90,7 +90,7 @@ func sonicMarshal(b *testing.B) {
 func sonicMarshalPatient(b *testing.B) {
 	sample, _ := os.ReadFile(filename)
 	var patient Patient
-	if err := sonic.UnmarshalString(string(sample), &patient); err != nil {
+	if err := sonic.Unmarshal(sample, &patient); err != nil {
 		log.Fatal(err)
 	}
 	b.ResetTimer()

@@ -33,118 +33,118 @@ features and benchmarks for a few of the JSON tools for Go.
 
 ```
 Parse string/[]byte to simple go types ([]interface{}, int64, string, etc)
-     json.Unmarshal          21390 ns/op        17744 B/op          334 allocs/op
-       oj.Parse              10062 ns/op         5691 B/op          364 allocs/op
+     json.Unmarshal          21329 ns/op        17744 B/op          334 allocs/op
+       oj.Parse              10176 ns/op         5691 B/op          364 allocs/op
  fastjson >>> not supported <<<
- jsoniter.Unmarshal          15536 ns/op        19682 B/op          451 allocs/op
- simdjson.Parse              29506 ns/op       140634 B/op          361 allocs/op
-    gjson.ParseBytes         14698 ns/op        20041 B/op          175 allocs/op
-    sonic.Unmarshal           9407 ns/op        23658 B/op          168 allocs/op
+ jsoniter.Unmarshal          15512 ns/op        19681 B/op          451 allocs/op
+ simdjson.Parse              29419 ns/op       140634 B/op          361 allocs/op
+    gjson.ParseBytes         14966 ns/op        20039 B/op          175 allocs/op
+    sonic.Unmarshal           9830 ns/op        23651 B/op          168 allocs/op
 
-    sonic ███████████████▉ 2.27
-       oj ██████████████▉ 2.13
-    gjson ██████████▏ 1.46
+    sonic ███████████████▏ 2.17
+       oj ██████████████▋ 2.10
+    gjson █████████▉ 1.43
  jsoniter █████████▋ 1.38
      json ▓▓▓▓▓▓▓ 1.00
- simdjson █████  0.72
+ simdjson █████  0.73
  fastjson >>> not supported <<<
 
 Validate string/[]byte
-     json.Valid               6581 ns/op            0 B/op            0 allocs/op
-       oj.Validate            2295 ns/op            0 B/op            0 allocs/op
- fastjson.Validate            2737 ns/op            0 B/op            0 allocs/op
- jsoniter.Valid               4736 ns/op         2187 B/op          100 allocs/op
- simdjson.Validate           18949 ns/op       118633 B/op           11 allocs/op
-    gjson.Validate            2485 ns/op            0 B/op            0 allocs/op
-    sonic.Valid               2066 ns/op            0 B/op            0 allocs/op
+     json.Valid               6654 ns/op            0 B/op            0 allocs/op
+       oj.Validate            2358 ns/op            0 B/op            0 allocs/op
+ fastjson.Validate            2733 ns/op            0 B/op            0 allocs/op
+ jsoniter.Valid               4587 ns/op         2187 B/op          100 allocs/op
+ simdjson.Validate           17078 ns/op       118633 B/op           11 allocs/op
+    gjson.Validate            2417 ns/op            0 B/op            0 allocs/op
+    sonic.Valid               2063 ns/op            0 B/op            0 allocs/op
 
-    sonic ██████████████████████▎ 3.19
-       oj ████████████████████  2.87
-    gjson ██████████████████▌ 2.65
- fastjson ████████████████▊ 2.40
- jsoniter █████████▋ 1.39
+    sonic ██████████████████████▌ 3.23
+       oj ███████████████████▊ 2.82
+    gjson ███████████████████▎ 2.75
+ fastjson █████████████████  2.43
+ jsoniter ██████████▏ 1.45
      json ▓▓▓▓▓▓▓ 1.00
- simdjson ██▍ 0.35
+ simdjson ██▋ 0.39
 
 Iterate tokens in a string/[]byte
-     json.Decode             40653 ns/op        22568 B/op         1175 allocs/op
-       oj.Tokenize            4684 ns/op         1976 B/op          156 allocs/op
+     json.Decode             40086 ns/op        22568 B/op         1175 allocs/op
+       oj.Tokenize            4659 ns/op         1976 B/op          156 allocs/op
  fastjson >>> not supported <<<
- jsoniter.Decode             16237 ns/op        20361 B/op          456 allocs/op
+ jsoniter.Decode             16045 ns/op        20360 B/op          456 allocs/op
  simdjson >>> not supported <<<
     gjson >>> not supported <<<
-    sonic.Decode             10287 ns/op        24075 B/op          170 allocs/op
+    sonic.Decode             10210 ns/op        24055 B/op          170 allocs/op
 
-       oj ████████████████████████████████████████████████████████████▊ 8.68
-    sonic ███████████████████████████▋ 3.95
- jsoniter █████████████████▌ 2.50
+       oj ████████████████████████████████████████████████████████████▏ 8.60
+    sonic ███████████████████████████▍ 3.93
+ jsoniter █████████████████▍ 2.50
      json ▓▓▓▓▓▓▓ 1.00
  fastjson >>> not supported <<<
  simdjson >>> not supported <<<
     gjson >>> not supported <<<
 
 Unmarshal string/[]byte to a struct
-     json.Unmarshal          20358 ns/op         2576 B/op           74 allocs/op
-       oj.Unmarshal          23294 ns/op         9351 B/op          456 allocs/op
+     json.Unmarshal          20539 ns/op         2576 B/op           74 allocs/op
+       oj.Unmarshal          23282 ns/op         9350 B/op          456 allocs/op
  fastjson >>> not supported <<<
- jsoniter.Unmarshal           6904 ns/op         3141 B/op          170 allocs/op
+ jsoniter.Unmarshal           6779 ns/op         3141 B/op          170 allocs/op
  simdjson >>> not supported <<<
     gjson >>> not supported <<<
-    sonic.Unmarshal           4654 ns/op         4964 B/op           11 allocs/op
+    sonic.Unmarshal           4657 ns/op         4967 B/op           11 allocs/op
 
-    sonic ██████████████████████████████▌ 4.37
- jsoniter ████████████████████▋ 2.95
-     json ▓▓▓▓▓▓▓ 1.00
-       oj ██████  0.87
- fastjson >>> not supported <<<
- simdjson >>> not supported <<<
-    gjson >>> not supported <<<
-
-Marshal simple types to string/[]byte
-     json.Marshal            13910 ns/op         9873 B/op          216 allocs/op
-       oj.JSON                3868 ns/op            0 B/op            0 allocs/op
- fastjson >>> not supported <<<
- jsoniter.Marshal             7587 ns/op         7052 B/op           94 allocs/op
- simdjson >>> not supported <<<
-    gjson >>> not supported <<<
-    sonic.Marshal             4273 ns/op         2834 B/op            4 allocs/op
-
-       oj █████████████████████████▏ 3.60
-    sonic ██████████████████████▊ 3.26
- jsoniter ████████████▊ 1.83
-     json ▓▓▓▓▓▓▓ 1.00
- fastjson >>> not supported <<<
- simdjson >>> not supported <<<
-    gjson >>> not supported <<<
-
-Marshal a struct to string/[]byte
-     json.Marshal             3999 ns/op         3462 B/op            1 allocs/op
-       oj.Marshal             4538 ns/op         5178 B/op           45 allocs/op
- fastjson >>> not supported <<<
- jsoniter.Marshal             3635 ns/op         3471 B/op            2 allocs/op
- simdjson >>> not supported <<<
-    gjson >>> not supported <<<
-    sonic.Marshal             1536 ns/op         3275 B/op            4 allocs/op
-
-    sonic ██████████████████▏ 2.60
- jsoniter ███████▋ 1.10
+    sonic ██████████████████████████████▊ 4.41
+ jsoniter █████████████████████▏ 3.03
      json ▓▓▓▓▓▓▓ 1.00
        oj ██████▏ 0.88
  fastjson >>> not supported <<<
  simdjson >>> not supported <<<
     gjson >>> not supported <<<
 
-Read from single JSON file
-     json.Decode             27309 ns/op        32383 B/op          342 allocs/op
-       oj.ParseReader        11689 ns/op         9787 B/op          365 allocs/op
+Marshal simple types to string/[]byte
+     json.Marshal            14104 ns/op         9873 B/op          216 allocs/op
+       oj.JSON                3981 ns/op            0 B/op            0 allocs/op
  fastjson >>> not supported <<<
- jsoniter.Decode             18727 ns/op        20329 B/op          456 allocs/op
+ jsoniter.Marshal             7618 ns/op         7052 B/op           94 allocs/op
  simdjson >>> not supported <<<
     gjson >>> not supported <<<
-    sonic.Decode             10817 ns/op        24989 B/op          170 allocs/op
+    sonic.Marshal             4302 ns/op         2838 B/op            4 allocs/op
 
-    sonic █████████████████▋ 2.52
-       oj ████████████████▎ 2.34
+       oj ████████████████████████▊ 3.54
+    sonic ██████████████████████▉ 3.28
+ jsoniter ████████████▉ 1.85
+     json ▓▓▓▓▓▓▓ 1.00
+ fastjson >>> not supported <<<
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
+
+Marshal a struct to string/[]byte
+     json.Marshal             3988 ns/op         3462 B/op            1 allocs/op
+       oj.Marshal             4656 ns/op         5179 B/op           45 allocs/op
+ fastjson >>> not supported <<<
+ jsoniter.Marshal             3584 ns/op         3471 B/op            2 allocs/op
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
+    sonic.Marshal             1564 ns/op         3287 B/op            4 allocs/op
+
+    sonic █████████████████▊ 2.55
+ jsoniter ███████▊ 1.11
+     json ▓▓▓▓▓▓▓ 1.00
+       oj █████▉ 0.86
+ fastjson >>> not supported <<<
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
+
+Read from single JSON file
+     json.Decode             27624 ns/op        32385 B/op          342 allocs/op
+       oj.ParseReader        11768 ns/op         9787 B/op          365 allocs/op
+ fastjson >>> not supported <<<
+ jsoniter.Decode             18905 ns/op        20328 B/op          456 allocs/op
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
+    sonic.Decode             10897 ns/op        24822 B/op          170 allocs/op
+
+    sonic █████████████████▋ 2.54
+       oj ████████████████▍ 2.35
  jsoniter ██████████▏ 1.46
      json ▓▓▓▓▓▓▓ 1.00
  fastjson >>> not supported <<<
@@ -152,35 +152,35 @@ Read from single JSON file
     gjson >>> not supported <<<
 
 Read multiple JSON in a small log file (100MB)
-     json.Decode         754783591 ns/op   1188215096 B/op     14810435 allocs/op
-       oj.ParseReader    416261240 ns/op    847037565 B/op     15402844 allocs/op
+     json.Decode         777904671 ns/op   1188215104 B/op     14810435 allocs/op
+       oj.ParseReader    429464758 ns/op    847037602 B/op     15402844 allocs/op
  fastjson >>> not supported <<<
- jsoniter.Decode         580142263 ns/op   1264548448 B/op     19390814 allocs/op
- simdjson.ParseReader    343390707 ns/op   1388717310 B/op     13625790 allocs/op
+ jsoniter.Decode         598021948 ns/op   1264548296 B/op     19390812 allocs/op
+ simdjson.ParseReader    336196183 ns/op   1388715696 B/op     13625794 allocs/op
     gjson >>> not supported <<<
-    sonic.Decode         810115300 ns/op   1340996184 B/op      8293889 allocs/op
+    sonic.Decode         815438087 ns/op   1340996364 B/op      8293892 allocs/op
 
- simdjson ███████████████▍ 2.20
+ simdjson ████████████████▏ 2.31
        oj ████████████▋ 1.81
  jsoniter █████████  1.30
      json ▓▓▓▓▓▓▓ 1.00
-    sonic ██████▌ 0.93
+    sonic ██████▋ 0.95
  fastjson >>> not supported <<<
     gjson >>> not supported <<<
 
 Read multiple JSON in a semi large log file (5GB)
-     json.Decode       40568220837 ns/op  28649560816 B/op    740520933 allocs/op
-       oj.ParseReader  20054742024 ns/op  11590683488 B/op    770141085 allocs/op
+     json.Decode       41496327875 ns/op  28649559584 B/op    740520871 allocs/op
+       oj.ParseReader  20399459846 ns/op  11590687664 B/op    770141113 allocs/op
  fastjson >>> not supported <<<
- jsoniter.Decode       33123612319 ns/op  32465568952 B/op    969506786 allocs/op
+ jsoniter.Decode       33754924293 ns/op  32465568296 B/op    969506776 allocs/op
  simdjson.ParseReader >>> out of memory <<<
     gjson >>> not supported <<<
-    sonic.Decode       40681293615 ns/op  37719500168 B/op    414741703 allocs/op
+    sonic.Decode       41425456275 ns/op  37690427592 B/op    414741489 allocs/op
 
-       oj ██████████████▏ 2.02
- jsoniter ████████▌ 1.22
+       oj ██████████████▏ 2.03
+ jsoniter ████████▌ 1.23
+    sonic ███████  1.00
      json ▓▓▓▓▓▓▓ 1.00
-    sonic ██████▉ 1.00
  fastjson >>> not supported <<<
  simdjson >>> out of memory <<<
     gjson >>> not supported <<<
