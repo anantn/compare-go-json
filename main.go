@@ -315,6 +315,15 @@ func getSpecs() (s *specs) {
 							s.speed = strings.TrimSpace(parts[1])
 						}
 					}
+				} else if s.speed == "" && strings.Contains(line, "cpu MHz") {
+					parts := strings.Split(line, ":")
+					if 1 < len(parts) {
+						speed := strings.TrimSpace(parts[1])
+						speedNum, err := strconv.ParseFloat(speed, 64)
+						if err == nil {
+							s.speed = fmt.Sprintf("%3.2fGHz", speedNum/1000)
+						}
+					}
 				}
 				s.cores = fmt.Sprintf("%d", cnt)
 			}
