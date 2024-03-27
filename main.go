@@ -347,3 +347,26 @@ func getSpecs() (s *specs) {
 	}
 	return
 }
+
+func checkPatient(strval string, arrval int, boolval bool) error {
+	if strval != "MR" {
+		return fmt.Errorf("expected 12345, got %s", strval)
+	}
+	if arrval != 2 {
+		return fmt.Errorf("expected len(2), got len(%d)", arrval)
+	}
+	if boolval {
+		return fmt.Errorf("expected false, got true")
+	}
+	return nil
+}
+
+func checkLog(what string, where int) error {
+	if what != "Just some fake log entry for a generated log file." {
+		return fmt.Errorf("expected log entry got '%s'", what)
+	}
+	if where != 123 {
+		return fmt.Errorf("expected 123 got %d", where)
+	}
+	return nil
+}

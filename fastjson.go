@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -46,9 +47,22 @@ func fastjsonFile1(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		if _, err := p.ParseBytes(j); err != nil {
+		if val, err := p.ParseBytes(j); err != nil {
 			benchErr = err
 			b.Fail()
+		} else {
+			if val.Type() != fastjson.TypeObject {
+				benchErr = fmt.Errorf("expected object, got %s", val.Type())
+				b.Fail()
+			}
+			strtest := val.GetStringBytes("identifier", "0", "type", "coding", "0", "code")
+			arrtest := val.GetArray("name", "2", "given")
+			booltest := val.GetBool("deceasedBoolean")
+			err = checkPatient(string(strtest), len(arrtest), booltest)
+			if err != nil {
+				benchErr = err
+				b.Fail()
+			}
 		}
 	}
 }
@@ -62,16 +76,7 @@ func fastjsonFileManySmall(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := ioutil.ReadAll(f)
-		sc.InitBytes(j)
-		for sc.Next() {
-			if sc.Value().Exists() {
-				continue
-			}
-			if err := sc.Error(); err != nil {
-				benchErr = err
-				b.Fail()
-			}
-		}
+		fastjsonCheckFileValues(b, sc, j)
 	}
 }
 
@@ -85,16 +90,29 @@ func fastjsonFileManyLarge(b *testing.B) {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
-			sc.InitBytes(buf.Bytes())
-			for sc.Next() {
-				if sc.Value().Exists() {
-					continue
-				}
-				if err := sc.Error(); err != nil {
-					benchErr = err
-					b.Fail()
-				}
-			}
+			fastjsonCheckFileValues(b, sc, buf.Bytes())
+		}
+	}
+}
+
+func fastjsonCheckFileValues(b *testing.B, sc fastjson.Scanner, j []byte) {
+	sc.InitBytes(j)
+	for sc.Next() {
+		val := sc.Value()
+		if err := sc.Error(); err != nil {
+			benchErr = err
+			b.Fail()
+		}
+		if val.Type() != fastjson.TypeObject {
+			benchErr = fmt.Errorf("expected object, got %s", val.Type())
+			b.Fail()
+		}
+		whatval := val.GetStringBytes("what")
+		whereval := val.GetInt("where", "0", "line")
+		err := checkLog(string(whatval), whereval)
+		if err != nil {
+			benchErr = err
+			b.Fail()
 		}
 	}
 }

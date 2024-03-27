@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
+	"github.com/bytedance/sonic/ast"
 )
 
 var sonicPkg = pkg{
@@ -109,11 +110,30 @@ func sonicFile1(b *testing.B) {
 	defer func() { _ = f.Close() }()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		dec := sonic.ConfigDefault.NewDecoder(f)
-		var data interface{}
-		if err := dec.Decode(&data); err != nil {
+		j, _ := os.ReadFile(filename)
+		if root, err := sonic.Get(j); err != nil {
 			benchErr = err
 			b.Fail()
+		} else {
+			strtest, err := root.Get("identifier").Index(0).Get("type").Get("coding").Index(0).Get("code").String()
+			if err != nil {
+				benchErr = err
+				b.Fail()
+			}
+			arrtest, err := root.Get("name").Index(2).Get("given").Array()
+			if err != nil {
+				benchErr = err
+				b.Fail()
+			}
+			booltest, err := root.Get("deceasedBoolean").Bool()
+			if err != nil {
+				benchErr = err
+				b.Fail()
+			}
+			if err = checkPatient(strtest, len(arrtest), booltest); err != nil {
+				benchErr = err
+				b.Fail()
+			}
 		}
 	}
 }
@@ -127,10 +147,11 @@ func sonicFileManySmall(b *testing.B) {
 		_, _ = f.Seek(0, 0)
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			var data interface{}
-			if err := sonic.UnmarshalString(scanner.Text(), &data); err != nil {
+			if root, err := sonic.GetFromString(scanner.Text()); err != nil {
 				benchErr = err
 				b.Fail()
+			} else {
+				sonicCheckFileValues(b, &root)
 			}
 		}
 	}
@@ -151,5 +172,22 @@ func sonicFileManyLarge(b *testing.B) {
 				b.Fail()
 			}
 		}
+	}
+}
+
+func sonicCheckFileValues(b *testing.B, root *ast.Node) {
+	whatval, err := root.Get("what").String()
+	if err != nil {
+		benchErr = err
+		b.Fail()
+	}
+	whereval, err := root.Get("where").Index(0).Get("line").Int64()
+	if err != nil {
+		benchErr = err
+		b.Fail()
+	}
+	if err = checkLog(whatval, int(whereval)); err != nil {
+		benchErr = err
+		b.Fail()
 	}
 }

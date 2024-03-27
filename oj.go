@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/ohler55/ojg"
+	"github.com/ohler55/ojg/jp"
 	"github.com/ohler55/ojg/oj"
 )
 
@@ -103,12 +104,27 @@ func ojFile1(b *testing.B) {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
 	}
 	defer func() { _ = f.Close() }()
+
+	strpath := jp.MustParseString("$.identifier[0].type.coding[0].code")
+	arrpath := jp.MustParseString("$.name[2].given")
+	boolpath := jp.MustParseString("$.deceasedBoolean")
+
 	b.ResetTimer()
 	p := &oj.Parser{Reuse: true}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		if _, benchErr = p.ParseReader(f); benchErr != nil {
+		j, _ := ioutil.ReadAll(f)
+		var result any
+		if result, benchErr = p.Parse(j); benchErr != nil {
 			b.Fail()
+		} else {
+			strtest := strpath.Get(result)[0].(string)
+			arrtest := arrpath.Get(result)[0].([]interface{})
+			booltest := boolpath.Get(result)[0].(bool)
+			if err = checkPatient(strtest, len(arrtest), booltest); err != nil {
+				benchErr = err
+				b.Fail()
+			}
 		}
 	}
 }
@@ -160,12 +176,18 @@ func ojFileManySmallReader(b *testing.B) {
 func ojFileManySmallLoad(b *testing.B) {
 	f := openSmallLogFile()
 	defer func() { _ = f.Close() }()
+
+	whatpath := jp.MustParseString("$.what")
+	wherepath := jp.MustParseString("$.where[0].line")
+
 	b.ResetTimer()
 	p := &oj.Parser{Reuse: true}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		j, _ := ioutil.ReadAll(f)
-		if _, benchErr = p.Parse(j, ojCb); benchErr != nil {
+		if _, err := p.ParseReader(f, func(result any) {
+			ojCheckFileValues(b, result, whatpath, wherepath)
+		}); err != nil {
+			benchErr = err
 			b.Fail()
 		}
 	}
@@ -174,12 +196,28 @@ func ojFileManySmallLoad(b *testing.B) {
 func ojFileManyLarge(b *testing.B) {
 	f := openLargeLogFile()
 	defer func() { _ = f.Close() }()
+
+	whatpath := jp.MustParseString("$.what")
+	wherepath := jp.MustParseString("$.where[0].line")
+
 	b.ResetTimer()
 	p := &oj.Parser{Reuse: true}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		if _, benchErr = p.ParseReader(f, ojCb); benchErr != nil {
+		if _, err := p.ParseReader(f, func(result any) {
+			ojCheckFileValues(b, result, whatpath, wherepath)
+		}); err != nil {
+			benchErr = err
 			b.Fail()
 		}
+	}
+}
+
+func ojCheckFileValues(b *testing.B, result any, whatpath, wherepath jp.Expr) {
+	whatval := whatpath.Get(result)[0].(string)
+	whereval := wherepath.Get(result)[0].(int64)
+	if err := checkLog(whatval, int(whereval)); err != nil {
+		benchErr = err
+		b.Fail()
 	}
 }

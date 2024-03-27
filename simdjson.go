@@ -6,6 +6,8 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/minio/simdjson-go"
@@ -16,6 +18,7 @@ var simdjsonPkg = pkg{
 	calls: map[string]*call{
 		"parse":      {name: "Parse", fun: simdjsonParse},
 		"validate":   {name: "Validate", fun: simdjsonValidate},
+		"file1":      {name: "Decode", fun: simdjsonFile1},
 		"small-file": {name: "ParseReader", fun: simdjsonFileManySmall},
 		"large-file": {name: "ParseReader", fun: simdjsonFileManyLarge},
 	},
@@ -54,6 +57,25 @@ func simdjsonValidate(b *testing.B) {
 	var pj simdjson.ParsedJson
 	for n := 0; n < b.N; n++ {
 		if _, benchErr = simdjson.Parse(sample, &pj); benchErr != nil {
+			b.Fail()
+		}
+	}
+}
+
+func simdjsonFile1(b *testing.B) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Failed to read %s. %s\n", filename, err)
+	}
+	defer func() { _ = f.Close() }()
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_, _ = f.Seek(0, 0)
+		j, _ := io.ReadAll(f)
+		var pj simdjson.ParsedJson
+		if _, err := simdjson.Parse(j, &pj); err != nil {
+			benchErr = err
 			b.Fail()
 		}
 	}

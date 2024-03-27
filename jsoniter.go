@@ -117,6 +117,14 @@ func jsoniterFile1(b *testing.B) {
 			benchErr = err
 			b.Fail()
 		}
+		obj := data.(map[string]interface{})
+		strtest := obj["identifier"].([]interface{})[0].(map[string]interface{})["type"].(map[string]interface{})["coding"].([]interface{})[0].(map[string]interface{})["code"].(string)
+		arrtest := obj["name"].([]interface{})[2].(map[string]interface{})["given"].([]interface{})
+		booltest := obj["deceasedBoolean"].(bool)
+		if err := checkPatient(strtest, len(arrtest), booltest); err != nil {
+			benchErr = err
+			b.Fail()
+		}
 	}
 }
 
@@ -138,6 +146,7 @@ func jsoniterFileManySmall(b *testing.B) {
 				benchErr = err
 				b.Fail()
 			}
+			jsoniterCheckFileValues(b, data)
 		}
 	}
 }
@@ -159,6 +168,16 @@ func jsoniterFileManyLarge(b *testing.B) {
 				benchErr = err
 				b.Fail()
 			}
+			jsoniterCheckFileValues(b, data)
 		}
+	}
+}
+
+func jsoniterCheckFileValues(b *testing.B, data interface{}) {
+	whatval := data.(map[string]interface{})["what"].(string)
+	whereval := data.(map[string]interface{})["where"].([]interface{})[0].(map[string]interface{})["line"].(float64)
+	if err := checkLog(whatval, int(whereval)); err != nil {
+		benchErr = err
+		b.Fail()
 	}
 }
