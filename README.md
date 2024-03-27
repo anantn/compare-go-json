@@ -1,36 +1,11 @@
 # Compare Go JSON
 
-Not all JSON tools cover the same features which make it difficult to
-select a set of tools for a project. Here is an attempt to compare
-features and benchmarks for a few of the JSON tools for Go.
-
-## Features
-
-| Feature                         | [go/json](https://golang.org/pkg/encoding/json/) | [fastjson](https://github.com/valyala/fastjson) | [jsoniter](https://github.com/json-iterator/go) | [OjG](https://github.com/ohler55/ojg) | [simdjson](https://github.com/minio/simdjson-go) | [gjson](https://github.com/tidwall/gjson)
-| ------------------------------- | ------------------ | ------------------ | ------------------ | ------------------ | ------------------ | ------------------ |
-| Parse []byte to simple go types | :white_check_mark: | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark::boom: |
-| Validate                        | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Parse - io.Reader (large file)  | :white_check_mark: | :x:                | :white_check_mark: | :white_check_mark: | :x:                | :x:                |
-| Parse from file                 | :white_check_mark: | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
-| Parse to structs                | :white_check_mark: | :x:                | :white_check_mark: | :white_check_mark: | :x:                | :x:                |
-| Parse to interface types        | :x:                | :x:                | :x:                | :white_check_mark: | :x:                | :x:                |
-| Multiple JSON file/stream       | :white_check_mark: | :x:                | :white_check_mark: | :white_check_mark: | :x:                | :x:                |
-| ndjson (newline separated)      | :white_check_mark: | :x:                | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                |
-| Marshal/Write                   | :white_check_mark: | :x:                | :white_check_mark: | :white_check_mark: | :x:                | :x:                |
-| JSON Builder                    | :x:                | :x:                | :x:                | :white_check_mark: | :x:                | :x:                |
-| JSONPath                        | :x:                | :x:                | :x:                | :white_check_mark: | :x:                | :x::small_blue_diamond: |
-| Data type converters            | :x:                | :x:                | :x:                | :white_check_mark: | :x:                | :x:                |
-| Simple Encoding Notation        | :x:                | :x:                | :x:                | :white_check_mark: | :x:                | :x:                |
-| Test coverage                   | --                 | 93%                | 21%                | 100%               | 57.4%              | 91.5%              |
-
- :boom: _gjson does not validate while parsing (try a number of 1.2e3e4) although it does catch that error in validation._
-
- :small_blue_diamond: _gjson has an alternative search feature_
-
-[_Details of each feature listed are at the bottom of the page_](#Feature-Explanations)
+Fork of [ohler55/compare-go-json](https://github.com/ohler55/compare-go-json),
+modified to focus on JSON file parsing with dynamic (unknown) schema.
 
 # Benchmarks
 
+## x86_64 (Linux)
 ```
 Parse string/[]byte to simple go types ([]interface{}, int64, string, etc)
      json.Unmarshal          21466 ns/op        17744 B/op          334 allocs/op
@@ -197,54 +172,175 @@ Tests run on:
  Memory:          32 GB
 ```
 
-## Feature Explanations
+## ARM64 (Mac - M1 Max)
+NOTE: sonic is not supported on ARM64, falls back to `encoding/json`.
 
- - **Parse** parse a string to []byte slice in simple go types of
-   `[]interface`, `map[string]interface{}`, `string`, `float64`,
-   `int64`, `bool`, or `nil`. This support the use case of extracting
-   data from a JSON suitable for natigating as well as handing off to
-   other packages such as a database for storage.
+```
+WARNING: sonic only supports Go1.16~1.22 && CPU amd64, but your environment is not suitable
 
- - **Validate** a string or []byte slice without extracting values.
+Parse string/[]byte to simple go types ([]interface{}, int64, string, etc)
+     json.Unmarshal          29493 ns/op        17743 B/op          334 allocs/op
+       oj.Parse              13474 ns/op         5691 B/op          364 allocs/op
+ fastjson >>> not supported <<<
+ jsoniter.Unmarshal          19733 ns/op        19657 B/op          451 allocs/op
+ simdjson.Parse       >>> Unsupported platform <<<
+    gjson.ParseBytes         17462 ns/op        20040 B/op          175 allocs/op
+    sonic.Unmarshal          34242 ns/op        40625 B/op          345 allocs/op
 
- - **Read from io.Reader** indicates a source such as a socket or file
-   larger than will fit into memory can be parsed.
+       oj ███████████████▎ 2.19
+    gjson ███████████▊ 1.69
+ jsoniter ██████████▍ 1.49
+     json ▓▓▓▓▓▓▓ 1.00
+    sonic ██████  0.86
+ fastjson >>> not supported <<<
+ simdjson >>> Unsupported platform <<<
 
- - **Read from file** indicates a parser can read from a file if not
-   directly then using ioutils.
+Validate string/[]byte
+     json.Valid              10698 ns/op            0 B/op            0 allocs/op
+       oj.Validate            3745 ns/op            0 B/op            0 allocs/op
+ fastjson.Valid               4873 ns/op            0 B/op            0 allocs/op
+ jsoniter.Valid               6560 ns/op         2184 B/op          100 allocs/op
+ simdjson.Validate    >>> Unsupported platform <<<
+    gjson.Validate            3505 ns/op            0 B/op            0 allocs/op
+    sonic.Valid              10684 ns/op            0 B/op            0 allocs/op
 
- - **Parse to structs** is the ability to reconstitute a struct type
-   from JSON.
+    gjson █████████████████████▎ 3.05
+       oj ███████████████████▉ 2.86
+ fastjson ███████████████▎ 2.20
+ jsoniter ███████████▍ 1.63
+    sonic ███████  1.00
+     json ▓▓▓▓▓▓▓ 1.00
+ simdjson >>> Unsupported platform <<<
 
- - **Parse to interface types** is the ability to reconstitutes types
-   even if they are included as interfaces in a containing struct or
-   slice.
+Iterate tokens in a string/[]byte
+     json.Decode             48077 ns/op        22568 B/op         1175 allocs/op
+       oj.Tokenize            6561 ns/op         1976 B/op          156 allocs/op
+ fastjson >>> not supported <<<
+ jsoniter.Decode             19989 ns/op        20362 B/op          456 allocs/op
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
+    sonic.Decode             33650 ns/op        32432 B/op          343 allocs/op
 
- - **Multiple JSON** indicates a file or stream with multiple JSON
-   documents can be parsed. This is no restricted to the limited case
-   of exactly one JSON element per line. Encountered in database dumps
-   and load files.
+       oj ███████████████████████████████████████████████████▎ 7.33
+ jsoniter ████████████████▊ 2.41
+    sonic ██████████  1.43
+     json ▓▓▓▓▓▓▓ 1.00
+ fastjson >>> not supported <<<
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
 
- - **ndjson** is a multiple document JSON where each JSON document
-   must be on exactly one line. Found in log files.
+Unmarshal string/[]byte to a struct
+     json.Unmarshal          28676 ns/op         2576 B/op           74 allocs/op
+       oj.Unmarshal          27899 ns/op         9356 B/op          456 allocs/op
+ fastjson >>> not supported <<<
+ jsoniter.Unmarshal           9137 ns/op         3137 B/op          170 allocs/op
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
+    sonic.Unmarshal          33528 ns/op        25456 B/op           85 allocs/op
 
- - **Marshal/Write** is the ability of the package to marshal go types
-   in JSON.
+ jsoniter █████████████████████▉ 3.14
+       oj ███████▏ 1.03
+     json ▓▓▓▓▓▓▓ 1.00
+    sonic █████▉ 0.86
+ fastjson >>> not supported <<<
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
 
- - **JSON Builder** is the ability to create new data structures suitable for JSON encoding.
+Marshal simple types to string/[]byte
+     json.Marshal            16649 ns/op         9860 B/op          216 allocs/op
+       oj.JSON                5907 ns/op            0 B/op            0 allocs/op
+ fastjson >>> not supported <<<
+ jsoniter.Marshal             9819 ns/op         7042 B/op           94 allocs/op
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
+    sonic.Marshal            16440 ns/op         9524 B/op          217 allocs/op
 
- - **[JSONPath](https://goessner.net/articles/JsonPath)** is the
-   ability to navigate data using JSONPath expressions.
+       oj ███████████████████▋ 2.82
+ jsoniter ███████████▊ 1.70
+    sonic ███████  1.01
+     json ▓▓▓▓▓▓▓ 1.00
+ fastjson >>> not supported <<<
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
 
- - **Data type converters** tools for converting from type to simple
-   data types. Basically marshalling and unmarshalling to simple types
-   instead of to JSON.
+Marshal a struct to string/[]byte
+     json.Marshal             5047 ns/op         3457 B/op            1 allocs/op
+       oj.Marshal             6155 ns/op         5170 B/op           45 allocs/op
+ fastjson >>> not supported <<<
+ jsoniter.Marshal             5043 ns/op         3465 B/op            2 allocs/op
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
+    sonic.Marshal             4886 ns/op         3121 B/op            2 allocs/op
 
- - **[Simple Encoding Notation](https://github.com/ohler55/ojg/blob/develop/sen.md)** is
-   a lazy JSON format where quotes and commas are optional in most
-   cases. A merge of JSON and GraphQL formats for those of us that
-   don't want to be bothered with strict syntax checking.
+    sonic ███████▏ 1.03
+ jsoniter ███████  1.00
+     json ▓▓▓▓▓▓▓ 1.00
+       oj █████▋ 0.82
+ fastjson >>> not supported <<<
+ simdjson >>> not supported <<<
+    gjson >>> not supported <<<
 
- - **Parser Test coverage** percent unit test coverage of the parser
-   package. It does not include coverage of other package in the
-   offering.
+Read from single JSON file
+     json.Decode             38715 ns/op        32384 B/op          342 allocs/op
+       oj.ParseReader        21324 ns/op        21228 B/op          376 allocs/op
+ fastjson.Decode              8400 ns/op        12034 B/op            7 allocs/op
+ jsoniter.Decode             26706 ns/op        20327 B/op          456 allocs/op
+ simdjson.Decode      >>> Unsupported platform <<<
+    gjson.Decode              9541 ns/op        16368 B/op            9 allocs/op
+    sonic.Decode             15580 ns/op        12313 B/op           21 allocs/op
+
+ fastjson ████████████████████████████████▎ 4.61
+    gjson ████████████████████████████▍ 4.06
+    sonic █████████████████▍ 2.48
+       oj ████████████▋ 1.82
+ jsoniter ██████████▏ 1.45
+     json ▓▓▓▓▓▓▓ 1.00
+ simdjson >>> Unsupported platform <<<
+
+Read multiple JSON in a small log file (100MB)
+     json.Decode         989807958 ns/op   1188214660 B/op     14810438 allocs/op
+       oj.ParseReader    836860375 ns/op   1615716488 B/op     17772614 allocs/op
+ fastjson.Decode         180654611 ns/op    758001616 B/op       592492 allocs/op
+ jsoniter.Decode         766561250 ns/op   1264564856 B/op     19390894 allocs/op
+ simdjson.ParseReader >>> Unsupported platform <<<
+    gjson.Decode          45652329 ns/op    720083379 B/op           50 allocs/op
+    sonic.Decode         878642083 ns/op    794567944 B/op      2962991 allocs/op
+
+    gjson ███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▊ 21.68
+ fastjson ██████████████████████████████████████▎ 5.48
+ jsoniter █████████  1.29
+       oj ████████▎ 1.18
+    sonic ███████▉ 1.13
+     json ▓▓▓▓▓▓▓ 1.00
+ simdjson >>> Unsupported platform <<<
+
+Read multiple JSON in a semi large log file (5GB)
+     json.Decode       51264181209 ns/op  28649608784 B/op    740522344 allocs/op
+       oj.ParseReader  41515130417 ns/op  80785619680 B/op    888631231 allocs/op
+ fastjson.Decode       34472489750 ns/op  99289857552 B/op    414701117 allocs/op
+ jsoniter.Decode       43521046750 ns/op  32465448104 B/op    969503744 allocs/op
+ simdjson.ParseReader >>> Unsupported platform <<<
+    gjson.Decode       11664578042 ns/op   5213295968 B/op     29621133 allocs/op
+    sonic.Decode       63818727709 ns/op  68969453552 B/op   1095975923 allocs/op
+
+    gjson ██████████████████████████████▊ 4.39
+ fastjson ██████████▍ 1.49
+       oj ████████▋ 1.23
+ jsoniter ████████▏ 1.18
+     json ▓▓▓▓▓▓▓ 1.00
+    sonic █████▌ 0.80
+ simdjson >>> Unsupported platform <<<
+
+ Higher values (longer bars) are better in all cases. The bar graph compares the
+ parsing performance. The lighter colored bar is the reference, the go json
+ package.
+
+Tests run on:
+ Machine:         MacBookPro18,2
+ OS:              macOS 14.4.1
+ Processor:       
+ Cores:           proc 10:8:2
+ Processor Speed: 
+ Memory:          32 GB
+ ```
+ 
