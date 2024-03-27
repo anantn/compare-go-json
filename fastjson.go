@@ -68,20 +68,14 @@ func fastjsonFile1(b *testing.B) {
 }
 
 func fastjsonFileManySmall(b *testing.B) {
-	f := openSmallLogFile()
-	defer func() { _ = f.Close() }()
-
-	var sc fastjson.Scanner
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		_, _ = f.Seek(0, 0)
-		j, _ := ioutil.ReadAll(f)
-		fastjsonCheckFileValues(b, sc, j)
-	}
+	fastjsonCheckFileValues(b, openSmallLogFile())
 }
 
 func fastjsonFileManyLarge(b *testing.B) {
-	f := openLargeLogFile()
+	fastjsonCheckFileValues(b, openLargeLogFile())
+}
+
+func fastjsonCheckFileValues(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 
 	var sc fastjson.Scanner
@@ -90,29 +84,25 @@ func fastjsonFileManyLarge(b *testing.B) {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
-			fastjsonCheckFileValues(b, sc, buf.Bytes())
-		}
-	}
-}
-
-func fastjsonCheckFileValues(b *testing.B, sc fastjson.Scanner, j []byte) {
-	sc.InitBytes(j)
-	for sc.Next() {
-		val := sc.Value()
-		if err := sc.Error(); err != nil {
-			benchErr = err
-			b.Fail()
-		}
-		if val.Type() != fastjson.TypeObject {
-			benchErr = fmt.Errorf("expected object, got %s", val.Type())
-			b.Fail()
-		}
-		whatval := val.GetStringBytes("what")
-		whereval := val.GetInt("where", "0", "line")
-		err := checkLog(string(whatval), whereval)
-		if err != nil {
-			benchErr = err
-			b.Fail()
+			sc.InitBytes(buf.Bytes())
+			for sc.Next() {
+				val := sc.Value()
+				if err := sc.Error(); err != nil {
+					benchErr = err
+					b.Fail()
+				}
+				if val.Type() != fastjson.TypeObject {
+					benchErr = fmt.Errorf("expected object, got %s", val.Type())
+					b.Fail()
+				}
+				whatval := val.GetStringBytes("what")
+				whereval := val.GetInt("where", "0", "line")
+				err := checkLog(string(whatval), whereval)
+				if err != nil {
+					benchErr = err
+					b.Fail()
+				}
+			}
 		}
 	}
 }

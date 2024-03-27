@@ -129,30 +129,14 @@ func jsoniterFile1(b *testing.B) {
 }
 
 func jsoniterFileManySmall(b *testing.B) {
-	f := openSmallLogFile()
-	defer func() { _ = f.Close() }()
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		_, _ = f.Seek(0, 0)
-		j, _ := ioutil.ReadAll(f)
-		dec := jsoniter.NewDecoder(bytes.NewReader(j))
-		for {
-			var data interface{}
-			if !dec.More() {
-				break
-			}
-			if err := dec.Decode(&data); err != nil {
-				benchErr = err
-				b.Fail()
-			}
-			jsoniterCheckFileValues(b, data)
-		}
-	}
+	jsoniterCheckFileValues(b, openSmallLogFile())
 }
 
 func jsoniterFileManyLarge(b *testing.B) {
-	f := openLargeLogFile()
+	jsoniterCheckFileValues(b, openLargeLogFile())
+}
+
+func jsoniterCheckFileValues(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 
 	b.ResetTimer()
@@ -168,16 +152,13 @@ func jsoniterFileManyLarge(b *testing.B) {
 				benchErr = err
 				b.Fail()
 			}
-			jsoniterCheckFileValues(b, data)
+			whatval := data.(map[string]interface{})["what"].(string)
+			whereval := data.(map[string]interface{})["where"].([]interface{})[0].(map[string]interface{})["line"].(float64)
+			if err := checkLog(whatval, int(whereval)); err != nil {
+				benchErr = err
+				b.Fail()
+			}
 		}
 	}
-}
 
-func jsoniterCheckFileValues(b *testing.B, data interface{}) {
-	whatval := data.(map[string]interface{})["what"].(string)
-	whereval := data.(map[string]interface{})["where"].([]interface{})[0].(map[string]interface{})["line"].(float64)
-	if err := checkLog(whatval, int(whereval)); err != nil {
-		benchErr = err
-		b.Fail()
-	}
 }

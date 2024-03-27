@@ -29,6 +29,10 @@ func gjsonParse(b *testing.B) {
 	sample, _ := ioutil.ReadFile(filename)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
+		if !gjson.ValidBytes(sample) {
+			benchErr = errors.New("JSON not valid")
+			b.Fail()
+		}
 		_ = gjson.ParseBytes(sample).Value()
 	}
 }
@@ -56,7 +60,12 @@ func gjsonFile1(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		result := gjson.ParseBytes(j)
+		v := string(j)
+		if !gjson.Valid(v) {
+			benchErr = errors.New("JSON not valid")
+			b.Fail()
+		}
+		result := gjson.Parse(v)
 		if !result.IsObject() {
 			benchErr = errors.New("expected object")
 			b.Fail()
@@ -74,20 +83,14 @@ func gjsonFile1(b *testing.B) {
 }
 
 func gjsonFileManySmall(b *testing.B) {
-	f := openSmallLogFile()
-	defer func() { _ = f.Close() }()
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		_, _ = f.Seek(0, 0)
-		j, _ := ioutil.ReadAll(f)
-		result := gjson.ParseBytes(j)
-		gjsonCheckFileValues(b, result)
-	}
+	gjsonCheckFileValues(b, openSmallLogFile())
 }
 
 func gjsonFileManyLarge(b *testing.B) {
-	f := openLargeLogFile()
+	gjsonCheckFileValues(b, openLargeLogFile())
+}
+
+func gjsonCheckFileValues(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 
 	b.ResetTimer()
@@ -95,27 +98,28 @@ func gjsonFileManyLarge(b *testing.B) {
 		_, _ = f.Seek(0, 0)
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			if result := gjson.Parse(scanner.Text()); !result.IsObject() {
+			v := scanner.Text()
+			if !gjson.Valid(v) {
+				benchErr = errors.New("JSON not valid")
+				b.Fail()
+			}
+			if result := gjson.Parse(v); !result.IsObject() {
 				benchErr = errors.New("expected object")
 				b.Fail()
 			} else {
-				gjsonCheckFileValues(b, result)
+				if !result.IsObject() {
+					benchErr = errors.New("expected object")
+					b.Fail()
+				} else {
+					whatval := result.Get("what").String()
+					whereval := result.Get("where.0.line").Int()
+					err := checkLog(whatval, int(whereval))
+					if err != nil {
+						benchErr = err
+						b.Fail()
+					}
+				}
 			}
-		}
-	}
-}
-
-func gjsonCheckFileValues(b *testing.B, result gjson.Result) {
-	if !result.IsObject() {
-		benchErr = errors.New("expected object")
-		b.Fail()
-	} else {
-		whatval := result.Get("what").String()
-		whereval := result.Get("where.0.line").Int()
-		err := checkLog(whatval, int(whereval))
-		if err != nil {
-			benchErr = err
-			b.Fail()
 		}
 	}
 }

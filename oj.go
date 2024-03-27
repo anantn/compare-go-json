@@ -174,27 +174,14 @@ func ojFileManySmallReader(b *testing.B) {
 }
 
 func ojFileManySmallLoad(b *testing.B) {
-	f := openSmallLogFile()
-	defer func() { _ = f.Close() }()
-
-	whatpath := jp.MustParseString("$.what")
-	wherepath := jp.MustParseString("$.where[0].line")
-
-	b.ResetTimer()
-	p := &oj.Parser{Reuse: true}
-	for n := 0; n < b.N; n++ {
-		_, _ = f.Seek(0, 0)
-		if _, err := p.ParseReader(f, func(result any) {
-			ojCheckFileValues(b, result, whatpath, wherepath)
-		}); err != nil {
-			benchErr = err
-			b.Fail()
-		}
-	}
+	ojCheckFileValues(b, openSmallLogFile())
 }
 
 func ojFileManyLarge(b *testing.B) {
-	f := openLargeLogFile()
+	ojCheckFileValues(b, openLargeLogFile())
+}
+
+func ojCheckFileValues(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 
 	whatpath := jp.MustParseString("$.what")
@@ -205,19 +192,15 @@ func ojFileManyLarge(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		if _, err := p.ParseReader(f, func(result any) {
-			ojCheckFileValues(b, result, whatpath, wherepath)
+			whatval := whatpath.Get(result)[0].(string)
+			whereval := wherepath.Get(result)[0].(int64)
+			if err := checkLog(whatval, int(whereval)); err != nil {
+				benchErr = err
+				b.Fail()
+			}
 		}); err != nil {
 			benchErr = err
 			b.Fail()
 		}
-	}
-}
-
-func ojCheckFileValues(b *testing.B, result any, whatpath, wherepath jp.Expr) {
-	whatval := whatpath.Get(result)[0].(string)
-	whereval := wherepath.Get(result)[0].(int64)
-	if err := checkLog(whatval, int(whereval)); err != nil {
-		benchErr = err
-		b.Fail()
 	}
 }
