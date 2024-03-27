@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/valyala/fastjson"
 )
@@ -17,10 +18,11 @@ import (
 var fastjsonPkg = pkg{
 	name: "fastjson",
 	calls: map[string]*call{
-		"validate":   {name: "Valid", fun: fastjsonValidate},
-		"file1":      {name: "Decode", fun: fastjsonFile1},
-		"small-file": {name: "Decode", fun: fastjsonFileManySmall},
-		"large-file": {name: "Decode", fun: fastjsonFileManyLarge},
+		"validate":       {name: "Valid", fun: fastjsonValidate},
+		"marshal-custom": {name: "Marshal", fun: fastjsonMarshalCustom},
+		"file1":          {name: "Decode", fun: fastjsonFile1},
+		"small-file":     {name: "Decode", fun: fastjsonFileManySmall},
+		"large-file":     {name: "Decode", fun: fastjsonFileManyLarge},
 	},
 }
 
@@ -32,6 +34,30 @@ func fastjsonValidate(b *testing.B) {
 		if benchErr = fastjson.ValidateBytes(sample); benchErr != nil {
 			b.Fail()
 		}
+	}
+}
+
+func fastjsonMarshalCustom(b *testing.B) {
+	//{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
+	var a fastjson.Arena
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		o := a.NewObject()
+		o.Set("when", a.NewNumberFloat64(float64(time.Now().UnixNano())))
+		o.Set("what", a.NewString("Just some fake log entry for a generated log file."))
+		where := a.NewObject()
+		where.Set("file", a.NewString("example.go"))
+		where.Set("line", a.NewNumberInt(123))
+		arr := a.NewArray()
+		arr.SetArrayItem(0, where)
+		o.Set("where", arr)
+		o.Set("who", a.NewString("benchmark-application"))
+		o.Set("level", a.NewString("INFO"))
+		if err := checkMarshalCustom(string(o.MarshalTo(nil))); err != nil {
+			benchErr = err
+			b.Fail()
+		}
+		a.Reset()
 	}
 }
 

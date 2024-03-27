@@ -22,6 +22,7 @@ var jsonPkg = pkg{
 		"unmarshal-struct": {name: "Unmarshal", fun: goUnmarshalPatient},
 		"marshal":          {name: "Marshal", fun: goMarshal},
 		"marshal-struct":   {name: "Marshal", fun: goMarshalPatient},
+		"marshal-custom":   {name: "Marshal", fun: goMarshalCustom},
 		"file1":            {name: "Decode", fun: goFile1},
 		"small-file":       {name: "Decode", fun: goFileManySmallLoad},
 		"large-file":       {name: "Decode", fun: goFileManyLarge},
@@ -98,6 +99,22 @@ func goMarshalPatient(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		if _, benchErr = json.Marshal(&patient); benchErr != nil {
+			b.Fail()
+		}
+	}
+}
+
+func goMarshalCustom(b *testing.B) {
+	var data interface{}
+	err := json.Unmarshal([]byte(`{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}`), &data)
+	if err != nil {
+		benchErr = err
+		b.Fail()
+	}
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		if _, benchErr = json.Marshal(data); benchErr != nil {
 			b.Fail()
 		}
 	}

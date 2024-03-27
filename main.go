@@ -103,6 +103,7 @@ func main() {
 		{fun: "unmarshal-struct", title: "Unmarshal string/[]byte to a struct", ref: "json"},
 		{fun: "marshal", title: "Marshal simple types to string/[]byte", ref: "json"},
 		{fun: "marshal-struct", title: "Marshal a struct to string/[]byte", ref: "json"},
+		{fun: "marshal-custom", title: "Marshal custom data with a builder", ref: "json"},
 		{fun: "file1", title: "Read from single JSON file", ref: "json"},
 		{fun: "small-file", title: "Read multiple JSON in a small log file (100MB)", ref: "json"},
 		{fun: "large-file", title: "Read multiple JSON in a semi large log file (5GB)", ref: "json"},
@@ -367,6 +368,18 @@ func checkLog(what string, where int) error {
 	}
 	if where != 123 {
 		return fmt.Errorf("expected 123 got %d", where)
+	}
+	return nil
+}
+
+func checkMarshalCustom(data string) error {
+	if len(data) < 170 || len(data) > 180 {
+		return fmt.Errorf("expected 170-180 bytes, got %d", len(data))
+	}
+	for _, c := range []string{"when", "what", "where", "file", "line", "who", "level"} {
+		if !strings.Contains(data, c) {
+			return fmt.Errorf("expected %s", c)
+		}
 	}
 	return nil
 }

@@ -8,7 +8,9 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/bytedance/sonic/ast"
@@ -23,6 +25,7 @@ var sonicPkg = pkg{
 		"unmarshal-struct": {name: "Unmarshal", fun: sonicUnmarshalPatient},
 		"marshal":          {name: "Marshal", fun: sonicMarshal},
 		"marshal-struct":   {name: "Marshal", fun: sonicMarshalPatient},
+		"marshal-custom":   {name: "Marshal", fun: sonicMarshalCustom},
 		"file1":            {name: "Decode", fun: sonicFile1},
 		"small-file":       {name: "Decode", fun: sonicFileManySmall},
 		"large-file":       {name: "Decode", fun: sonicFileManyLarge},
@@ -97,6 +100,31 @@ func sonicMarshalPatient(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		if _, benchErr = sonic.Marshal(&patient); benchErr != nil {
+			b.Fail()
+		}
+	}
+}
+
+func sonicMarshalCustom(b *testing.B) {
+	//{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		dst := ast.NewObject(nil)
+		dst.Set("when", ast.NewNumber(strconv.FormatInt(time.Now().UnixNano(), 10)))
+		dst.Set("what", ast.NewString("Just some fake log entry for a generated log file."))
+		where := ast.NewObject([]ast.Pair{
+			{Key: "file", Value: ast.NewString("example.go")},
+			{Key: "line", Value: ast.NewNumber(strconv.Itoa(123))},
+		})
+		dst.Set("where", ast.NewArray([]ast.Node{where}))
+		dst.Set("who", ast.NewString("benchmark-application"))
+		dst.Set("level", ast.NewString("INFO"))
+		output, err := dst.MarshalJSON()
+		if err != nil {
+			benchErr = err
+			b.Fail()
+		}
+		if benchErr = checkMarshalCustom(string(output)); benchErr != nil {
 			b.Fail()
 		}
 	}

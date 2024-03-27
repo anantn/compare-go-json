@@ -10,6 +10,7 @@ require (
 	github.com/minio/simdjson-go v0.4.5
 	github.com/ohler55/ojg v1.21.4
 	github.com/tidwall/gjson v1.17.1
+	github.com/tidwall/sjson v1.2.5
 	github.com/valyala/fastjson v1.6.4
 )
 

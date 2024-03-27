@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/ohler55/ojg"
 	"github.com/ohler55/ojg/jp"
@@ -22,6 +23,7 @@ var ojPkg = pkg{
 		"unmarshal-struct": {name: "Unmarshal", fun: ojUnmarshalPatient},
 		"marshal":          {name: "JSON", fun: ojJSON},
 		"marshal-struct":   {name: "Marshal", fun: ojMarshalPatient},
+		"marshal-custom":   {name: "Builder", fun: ojMarshalCustom},
 		"file1":            {name: "ParseReader", fun: ojFile1},
 		"small-file":       {name: "ParseReader", fun: ojFileManySmallLoad},
 		"large-file":       {name: "ParseReader", fun: ojFileManyLarge},
@@ -94,6 +96,30 @@ func ojMarshalPatient(b *testing.B) {
 		//_ = wr.MustJSON(&patient)
 		if _, err := oj.Marshal(&patient); err != nil {
 			log.Fatal(err)
+		}
+	}
+}
+
+func ojMarshalCustom(b *testing.B) {
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		var bu oj.Builder
+		_ = bu.Object()
+		_ = bu.Value(time.Now().UnixNano(), "when")
+		_ = bu.Value("Just some fake log entry for a generated log file.", "what")
+		_ = bu.Array("where")
+		_ = bu.Object()
+		_ = bu.Value("example.go", "file")
+		_ = bu.Value(123, "line")
+		bu.Pop()
+		bu.Pop()
+		_ = bu.Value("benchmark-application", "who")
+		_ = bu.Value("INFO", "level")
+		bu.PopAll()
+		entry := bu.Result()
+		if err := checkMarshalCustom(oj.JSON(entry)); err != nil {
+			benchErr = err
+			b.Fail()
 		}
 	}
 }

@@ -10,18 +10,21 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
 var gjsonPkg = pkg{
 	name: "gjson",
 	calls: map[string]*call{
-		"parse":      {name: "ParseBytes", fun: gjsonParse},
-		"validate":   {name: "Validate", fun: gjsonValid},
-		"file1":      {name: "Decode", fun: gjsonFile1},
-		"small-file": {name: "Decode", fun: gjsonFileManySmall},
-		"large-file": {name: "Decode", fun: gjsonFileManyLarge},
+		"parse":          {name: "ParseBytes", fun: gjsonParse},
+		"validate":       {name: "Validate", fun: gjsonValid},
+		"marshal-custom": {name: "Marshal", fun: gjsonMarshalCustom},
+		"file1":          {name: "Decode", fun: gjsonFile1},
+		"small-file":     {name: "Decode", fun: gjsonFileManySmall},
+		"large-file":     {name: "Decode", fun: gjsonFileManyLarge},
 	},
 }
 
@@ -44,6 +47,23 @@ func gjsonValid(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		if !gjson.ValidBytes(sample) {
 			benchErr = errors.New("JSON not valid")
+			b.Fail()
+		}
+	}
+}
+
+func gjsonMarshalCustom(b *testing.B) {
+	//{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		v, _ := sjson.Set("{}", "when", time.Now().UnixNano())
+		v, _ = sjson.Set(v, "what", "Just some fake log entry for a generated log file.")
+		v, _ = sjson.Set(v, "where.0.file", "example.go")
+		v, _ = sjson.Set(v, "where.0.line", 123)
+		v, _ = sjson.Set(v, "who", "benchmark-application")
+		v, _ = sjson.Set(v, "level", "INFO")
+		if err := checkMarshalCustom(v); err != nil {
+			benchErr = err
 			b.Fail()
 		}
 	}

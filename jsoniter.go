@@ -22,6 +22,7 @@ var jsoniterPkg = pkg{
 		"unmarshal-struct": {name: "Unmarshal", fun: jsoniterUnmarshalPatient},
 		"marshal":          {name: "Marshal", fun: jsoniterMarshal},
 		"marshal-struct":   {name: "Marshal", fun: jsoniterMarshalPatient},
+		"marshal-custom":   {name: "Marshal", fun: jsoniterMarshalCustom},
 		"file1":            {name: "Decode", fun: jsoniterFile1},
 		"small-file":       {name: "Decode", fun: jsoniterFileManySmall},
 		"large-file":       {name: "Decode", fun: jsoniterFileManyLarge},
@@ -79,6 +80,22 @@ func jsoniterUnmarshalPatient(b *testing.B) {
 
 func jsoniterMarshal(b *testing.B) {
 	data := loadSample()
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		if _, benchErr = jsoniter.Marshal(data); benchErr != nil {
+			b.Fail()
+		}
+	}
+}
+
+func jsoniterMarshalCustom(b *testing.B) {
+	var data interface{}
+	err := jsoniter.UnmarshalFromString(`{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}`, &data)
+	if err != nil {
+		benchErr = err
+		b.Fail()
+	}
+
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		if _, benchErr = jsoniter.Marshal(data); benchErr != nil {
