@@ -7,7 +7,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -29,14 +29,18 @@ const (
 )
 
 var (
-	filename = "data/patient.json"
-	benchErr error
+	filename          = "data/patient.json"
+	singleNumChildren = 116
+	benchErr          error
 
-	smallLogFile = "data/log-small.json"
-	smallSize    = 100
+	logNumChildren  = 125
+	smallLogFile    = "data/log-small.json"
+	smallSize       = 100
+	smallLogFileLen = 0
 
-	largeLogFile = "data/log-large.json"
-	largeSize    = 5000
+	largeLogFile    = "data/log-large.json"
+	largeSize       = 5000
+	largeLogFileLen = 0
 )
 
 type specs struct {
@@ -75,12 +79,6 @@ type suite struct {
 	ref   string // reference package for the suite
 }
 
-type noWriter int
-
-func (w noWriter) Write(b []byte) (int, error) {
-	return len(b), nil
-}
-
 func main() {
 	testing.Init()
 	flag.Parse()
@@ -92,7 +90,7 @@ func main() {
 	if s != nil && strings.Contains(s.os, "mac") {
 		for _, c := range sonicPkg.calls {
 			c.fun = func(b *testing.B) {
-				benchErr = errors.New("Unsupported platform")
+				benchErr = errors.New("unsupported platform")
 				b.Fail()
 			}
 		}
@@ -105,20 +103,20 @@ func main() {
 		&jsoniterPkg,
 		&simdjsonPkg,
 		&gjsonPkg,
-		&gjsonNoValidPkg,
+		&gjsonValidatePkg,
 		&sonicPkg,
+		&sonicValidatePkg,
 	}
 	for _, s := range []*suite{
-		{fun: "parse", title: "Parse string/[]byte to simple go types ([]interface{}, int64, string, etc)", ref: "json"},
-		{fun: "validate", title: "Validate string/[]byte", ref: "json"},
-		{fun: "decode", title: "Iterate tokens in a string/[]byte", ref: "json"},
-		{fun: "unmarshal-struct", title: "Unmarshal string/[]byte to a struct", ref: "json"},
-		{fun: "marshal", title: "Marshal simple types to string/[]byte", ref: "json"},
-		{fun: "marshal-struct", title: "Marshal a struct to string/[]byte", ref: "json"},
-		{fun: "marshal-custom", title: "Marshal custom data with a builder", ref: "json"},
-		{fun: "file1", title: "Read from single JSON file", ref: "json"},
-		{fun: "small-file", title: "Read multiple JSON in a small log file, read few keys (100MB)", ref: "json"},
-		{fun: "large-file", title: "Read multiple JSON in a semi large log file, read few keys (5GB)", ref: "json"},
+		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},
+		{fun: "validate-string", title: "Validate string", ref: "json"},
+		{fun: "unmarshal-single-few-keys", title: "Unmarshal single JSON record, read few keys", ref: "json"},
+		{fun: "unmarshal-single-all-keys", title: "Unmarshal single JSON record, read all keys", ref: "json"},
+		{fun: "unmarshal-small-file-few-keys", title: "Unmarshal many JSON records from small file (100MB), read few keys", ref: "json"},
+		{fun: "unmarshal-small-file-all-keys", title: "Unmarshal many JSON records from small file (100MB), read all keys", ref: "json"},
+		{fun: "unmarshal-large-file-few-keys", title: "Unmarshal many JSON records from semi-large file (5GB), read few keys", ref: "json"},
+		{fun: "unmarshal-large-file-all-keys", title: "Unmarshal many JSON records from semi-large file (5GB), read all keys", ref: "json"},
+		{fun: "marshal-builder", title: "Marshal custom data through an object builder", ref: "json"},
 	} {
 		s.exec(pkgs)
 	}
@@ -200,18 +198,19 @@ func (s *suite) exec(pkgs []*pkg) {
 	}
 }
 
-func loadSample() (data interface{}) {
-	f, err := os.Open(filename)
-	if err != nil {
-		log.Fatalf("Failed to load %s. %s\n", filename, err)
+func lineCounter(r io.Reader) (int, error) {
+	buf := make([]byte, 32*1024)
+	count := 0
+	for {
+		c, err := r.Read(buf)
+		count += bytes.Count(buf[:c], []byte{'\n'})
+		switch {
+		case err == io.EOF:
+			return count, nil
+		case err != nil:
+			return count, err
+		}
 	}
-	defer func() { _ = f.Close() }()
-
-	var p oj.Parser
-	if data, err = p.ParseReader(f); err != nil {
-		log.Fatalf("Failed to parse %s. %s\n", filename, err)
-	}
-	return
 }
 
 func openSmallLogFile() *os.File {
@@ -222,6 +221,11 @@ func openSmallLogFile() *os.File {
 		}
 		if f, err = os.Open(smallLogFile); err != nil {
 			log.Fatalf("Failed to open %s. %s\n", smallLogFile, err)
+		}
+	}
+	if smallLogFileLen == 0 {
+		if smallLogFileLen, err = lineCounter(f); err != nil {
+			log.Fatalf("Failed to count lines in %s. %s\n", smallLogFile, err)
 		}
 	}
 	return f
@@ -237,6 +241,11 @@ func openLargeLogFile() *os.File {
 			log.Fatalf("Failed to open %s. %s\n", largeLogFile, err)
 		}
 	}
+	if largeLogFileLen == 0 {
+		if largeLogFileLen, err = lineCounter(f); err != nil {
+			log.Fatalf("Failed to count lines in %s. %s\n", largeLogFile, err)
+		}
+	}
 	return f
 }
 
@@ -247,6 +256,10 @@ func createLogFile(filename string, size int) error {
 		return err
 	}
 	defer func() { _ = f.Close() }()
+
+	// Repeat of patient
+	var patientData interface{}
+	oj.Unmarshal([]byte(getSamplePatient()), &patientData)
 
 	// Build a log entry.
 	var b oj.Builder
@@ -261,6 +274,7 @@ func createLogFile(filename string, size int) error {
 	b.Pop()
 	_ = b.Value("benchmark-application", "who")
 	_ = b.Value("INFO", "level")
+	_ = b.Value(patientData, "patient")
 	b.PopAll()
 	entry := b.Result()
 
@@ -315,7 +329,7 @@ func getSpecs() (s *specs) {
 		if 1 < len(parts) {
 			s.os = string(strings.TrimSpace(parts[1]))
 		}
-		if out, err = ioutil.ReadFile("/proc/cpuinfo"); err == nil {
+		if out, err = os.ReadFile("/proc/cpuinfo"); err == nil {
 			cnt := 0
 			for _, line := range strings.Split(string(out), "\n") {
 				if strings.Contains(line, "processor") {
@@ -342,7 +356,7 @@ func getSpecs() (s *specs) {
 				s.cores = fmt.Sprintf("%d", cnt)
 			}
 		}
-		if out, err = ioutil.ReadFile("/proc/meminfo"); err == nil {
+		if out, err = os.ReadFile("/proc/meminfo"); err == nil {
 			for _, line := range strings.Split(string(out), "\n") {
 				if strings.Contains(line, "MemTotal") {
 					parts := strings.Split(line, ":")
@@ -359,39 +373,4 @@ func getSpecs() (s *specs) {
 		}
 	}
 	return
-}
-
-func checkPatient(strval string, arrval int, boolval bool) error {
-	if strval != "MR" {
-		return fmt.Errorf("expected 12345, got %s", strval)
-	}
-	if arrval != 2 {
-		return fmt.Errorf("expected len(2), got len(%d)", arrval)
-	}
-	if boolval {
-		return fmt.Errorf("expected false, got true")
-	}
-	return nil
-}
-
-func checkLog(what string, where int) error {
-	if what != "Just some fake log entry for a generated log file." {
-		return fmt.Errorf("expected log entry got '%s'", what)
-	}
-	if where != 123 {
-		return fmt.Errorf("expected 123 got %d", where)
-	}
-	return nil
-}
-
-func checkMarshalCustom(data string) error {
-	if len(data) < 170 || len(data) > 180 {
-		return fmt.Errorf("expected 170-180 bytes, got %d", len(data))
-	}
-	for _, c := range []string{"when", "what", "where", "file", "line", "who", "level"} {
-		if !strings.Contains(data, c) {
-			return fmt.Errorf("expected %s", c)
-		}
-	}
-	return nil
 }

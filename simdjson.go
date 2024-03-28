@@ -3,9 +3,7 @@
 package main
 
 import (
-	"errors"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"testing"
@@ -16,50 +14,10 @@ import (
 var simdjsonPkg = pkg{
 	name: "simdjson",
 	calls: map[string]*call{
-		"parse":      {name: "Parse", fun: simdjsonParse},
-		"validate":   {name: "Validate", fun: simdjsonValidate},
-		"file1":      {name: "Decode", fun: simdjsonFile1},
-		"small-file": {name: "ParseReader", fun: simdjsonFileManySmall},
-		"large-file": {name: "ParseReader", fun: simdjsonFileManyLarge},
+		"unmarshal-single-all-keys":     {name: "Unmarshal", fun: simdjsonFile1},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: simdjsonFileManySmall},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: simdjsonFileManyLarge},
 	},
-}
-
-func simdjsonParse(b *testing.B) {
-	if !simdjson.SupportedCPU() {
-		benchErr = errors.New("Unsupported CPU by simdjson")
-		b.Fail()
-	}
-	sample, _ := ioutil.ReadFile(filename)
-	b.ResetTimer()
-
-	var pj simdjson.ParsedJson
-	for n := 0; n < b.N; n++ {
-		parsed, err := simdjson.Parse(sample, &pj)
-		if err != nil {
-			benchErr = err
-			b.Fail()
-			break
-		}
-		if benchErr = simdjsonExtract(parsed); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
-func simdjsonValidate(b *testing.B) {
-	if !simdjson.SupportedCPU() {
-		benchErr = errors.New("Unsupported CPU by simdjson")
-		b.Fail()
-	}
-	sample, _ := ioutil.ReadFile(filename)
-	b.ResetTimer()
-
-	var pj simdjson.ParsedJson
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = simdjson.Parse(sample, &pj); benchErr != nil {
-			b.Fail()
-		}
-	}
 }
 
 func simdjsonFile1(b *testing.B) {
@@ -182,7 +140,7 @@ func simdjsonExtract(pj *simdjson.ParsedJson) (err error) {
 					return
 				}
 				var m map[string]interface{}
-				if m, err = obj.Map(m); err != nil {
+				if _, err = obj.Map(m); err != nil {
 					return
 				}
 			}
@@ -190,5 +148,4 @@ func simdjsonExtract(pj *simdjson.ParsedJson) (err error) {
 			return
 		}
 	}
-	return
 }
