@@ -10,45 +10,45 @@ import (
 	"os"
 	"testing"
 
-	goccy "github.com/goccy/go-json"
+	segment "github.com/segmentio/encoding/json"
 )
 
-var goccyPkg = pkg{
-	name: "goccy",
+var segmentPkg = pkg{
+	name: "segment",
 	calls: map[string]*call{
-		"validate-bytes":            {name: "Validate", fun: goccyValidate},
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: goccyFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: goccyFile1All},
+		"validate-bytes":            {name: "Validate", fun: segmentValidate},
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: segmentFile1},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: segmentFile1All},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			goccyFileMany(b, openSmallLogFile())
+			segmentFileMany(b, openSmallLogFile())
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			goccyFileManyAll(b, openSmallLogFile())
+			segmentFileManyAll(b, openSmallLogFile())
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			goccyFileMany(b, openLargeLogFile())
+			segmentFileMany(b, openLargeLogFile())
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			goccyFileManyAll(b, openLargeLogFile())
+			segmentFileManyAll(b, openLargeLogFile())
 		}},
-		"marshal-builder": {name: "Marshal", fun: goccyMarshalBuilder},
+		"marshal-builder": {name: "Marshal", fun: segmentMarshalBuilder},
 	},
 }
 
-func goccyValidate(b *testing.B) {
+func segmentValidate(b *testing.B) {
 	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		if !goccy.Valid(sample) {
+		if !segment.Valid(sample) {
 			benchErr = errors.New("JSON not valid")
 			b.Fail()
 		}
 	}
 }
 
-func goccyMarshalBuilder(b *testing.B) {
+func segmentMarshalBuilder(b *testing.B) {
 	var data interface{}
-	err := goccy.Unmarshal([]byte(getSampleLog()), &data)
+	err := segment.Unmarshal([]byte(getSampleLog()), &data)
 	if err != nil {
 		benchErr = err
 		b.Fail()
@@ -56,13 +56,13 @@ func goccyMarshalBuilder(b *testing.B) {
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		if _, benchErr = goccy.Marshal(data); benchErr != nil {
+		if _, benchErr = segment.Marshal(data); benchErr != nil {
 			b.Fail()
 		}
 	}
 }
 
-func goccyFile1(b *testing.B) {
+func segmentFile1(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -74,7 +74,7 @@ func goccyFile1(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		if err := goccy.Unmarshal(j, &p); err != nil {
+		if err := segment.Unmarshal(j, &p); err != nil {
 			benchErr = err
 			b.Fail()
 		}
@@ -85,7 +85,7 @@ func goccyFile1(b *testing.B) {
 	}
 }
 
-func goccyFile1All(b *testing.B) {
+func segmentFile1All(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -97,14 +97,14 @@ func goccyFile1All(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		if err := goccy.Unmarshal(j, &p); err != nil {
+		if err := segment.Unmarshal(j, &p); err != nil {
 			benchErr = err
 			b.Fail()
 		}
 	}
 }
 
-func goccyFileMany(b *testing.B, f *os.File) {
+func segmentFileMany(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
@@ -113,7 +113,7 @@ func goccyFileMany(b *testing.B, f *os.File) {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
-			if err := goccy.Unmarshal(buf.Bytes(), &l); err != nil {
+			if err := segment.Unmarshal(buf.Bytes(), &l); err != nil {
 				benchErr = err
 				b.Fail()
 			}
@@ -125,7 +125,7 @@ func goccyFileMany(b *testing.B, f *os.File) {
 	}
 }
 
-func goccyFileManyAll(b *testing.B, f *os.File) {
+func segmentFileManyAll(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
@@ -134,7 +134,7 @@ func goccyFileManyAll(b *testing.B, f *os.File) {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
-			if err := goccy.Unmarshal(buf.Bytes(), &data); err != nil {
+			if err := segment.Unmarshal(buf.Bytes(), &data); err != nil {
 				benchErr = err
 				b.Fail()
 			}
