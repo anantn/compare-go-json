@@ -96,6 +96,7 @@ func main() {
 		&ojPkg,
 		&fastjsonPkg,
 		&jsoniterPkg,
+		&goccyPkg,
 		&simdjsonPkg,
 		&gjsonPkg,
 		&gjsonValidatePkg,

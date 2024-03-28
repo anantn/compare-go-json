@@ -6,6 +6,7 @@ toolchain go1.22.1
 
 require (
 	github.com/bytedance/sonic v1.11.3
+	github.com/goccy/go-json v0.10.2
 	github.com/json-iterator/go v1.1.12
 	github.com/minio/simdjson-go v0.4.5
 	github.com/ohler55/ojg v1.21.4

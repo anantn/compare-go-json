@@ -8,190 +8,208 @@ modified to focus on JSON file parsing with dynamic (unknown) schema.
 ## x86_64 (Linux)
 ```
 Validate []byte
-     json.Validate            6594 ns/op            0 B/op            0 allocs/op
-       oj.Validate            2271 ns/op            0 B/op            0 allocs/op
- fastjson.Validate            2630 ns/op            0 B/op            0 allocs/op
- jsoniter.Validate            4487 ns/op         2187 B/op          100 allocs/op
+     json.Validate            6363 ns/op            0 B/op            0 allocs/op
+       oj.Validate            2267 ns/op            0 B/op            0 allocs/op
+ fastjson.Validate            2686 ns/op            0 B/op            0 allocs/op
+ jsoniter.Validate            4629 ns/op         2187 B/op          100 allocs/op
+    goccy >>> not supported <<<
  simdjson >>> not supported <<<
-    gjson.Validate            2216 ns/op            0 B/op            0 allocs/op
+    gjson.Validate            2351 ns/op            0 B/op            0 allocs/op
   gjson-v >>> not supported <<<
-    sonic.Validate            1979 ns/op            0 B/op            0 allocs/op
+    sonic.Validate            1956 ns/op            0 B/op            0 allocs/op
   sonic-v >>> not supported <<<
 
-    sonic ███████████████████████▎ 3.33
-    gjson ████████████████████▊ 2.98
-       oj ████████████████████▎ 2.90
- fastjson █████████████████▌ 2.51
- jsoniter ██████████▎ 1.47
+    sonic ██████████████████████▊ 3.25
+       oj ███████████████████▋ 2.81
+    gjson ██████████████████▉ 2.71
+ fastjson ████████████████▌ 2.37
+ jsoniter █████████▌ 1.37
      json ▓▓▓▓▓▓▓ 1.00
+    goccy >>> not supported <<<
  simdjson >>> not supported <<<
   gjson-v >>> not supported <<<
   sonic-v >>> not supported <<<
 
 Validate string
-     json.Validate            6289 ns/op            0 B/op            0 allocs/op
+     json.Validate            6118 ns/op            0 B/op            0 allocs/op
        oj >>> not supported <<<
- fastjson.Validate            3145 ns/op         4096 B/op            1 allocs/op
+ fastjson.Validate            3137 ns/op         4096 B/op            1 allocs/op
  jsoniter >>> not supported <<<
+    goccy >>> not supported <<<
  simdjson >>> not supported <<<
-    gjson.Validate            2709 ns/op         4096 B/op            1 allocs/op
+    gjson.Validate            3008 ns/op         4096 B/op            1 allocs/op
   gjson-v >>> not supported <<<
-    sonic.Validate            2526 ns/op         4130 B/op            1 allocs/op
+    sonic.Validate            2652 ns/op         4136 B/op            1 allocs/op
   sonic-v >>> not supported <<<
 
-    sonic █████████████████▍ 2.49
-    gjson ████████████████▎ 2.32
- fastjson █████████████▉ 2.00
+    sonic ████████████████▏ 2.31
+    gjson ██████████████▏ 2.03
+ fastjson █████████████▋ 1.95
      json ▓▓▓▓▓▓▓ 1.00
        oj >>> not supported <<<
  jsoniter >>> not supported <<<
+    goccy >>> not supported <<<
  simdjson >>> not supported <<<
   gjson-v >>> not supported <<<
   sonic-v >>> not supported <<<
 
 Unmarshal single JSON record, read few keys
-     json.Unmarshal          18540 ns/op        15088 B/op           23 allocs/op
+     json.Unmarshal          18397 ns/op        15088 B/op           23 allocs/op
        oj >>> not supported <<<
- fastjson.Unmarshal           4888 ns/op        12034 B/op            7 allocs/op
- jsoniter.Unmarshal           8142 ns/op        14080 B/op           84 allocs/op
+ fastjson.Unmarshal           5184 ns/op        12034 B/op            7 allocs/op
+ jsoniter.Unmarshal           8193 ns/op        14084 B/op           84 allocs/op
+    goccy.Unmarshal           6007 ns/op        16302 B/op            7 allocs/op
  simdjson >>> not supported <<<
-    gjson.Unmarshal           5665 ns/op        16368 B/op            9 allocs/op
-  gjson-v.Unmarshal           8112 ns/op        16368 B/op            9 allocs/op
-    sonic.Unmarshal           3365 ns/op         4945 B/op           12 allocs/op
-  sonic-v.Unmarshal           5490 ns/op         4901 B/op           12 allocs/op
+    gjson.Unmarshal           6067 ns/op        16368 B/op            9 allocs/op
+  gjson-v.Unmarshal           8785 ns/op        16368 B/op            9 allocs/op
+    sonic.Unmarshal           3714 ns/op         4954 B/op           12 allocs/op
+  sonic-v.Unmarshal           5877 ns/op         4923 B/op           12 allocs/op
 
-    sonic ██████████████████████████████████████▌ 5.51
- fastjson ██████████████████████████▌ 3.79
-  sonic-v ███████████████████████▋ 3.38
-    gjson ██████████████████████▉ 3.27
-  gjson-v ███████████████▉ 2.29
- jsoniter ███████████████▉ 2.28
+    sonic ██████████████████████████████████▋ 4.95
+ fastjson ████████████████████████▊ 3.55
+  sonic-v █████████████████████▉ 3.13
+    goccy █████████████████████▍ 3.06
+    gjson █████████████████████▏ 3.03
+ jsoniter ███████████████▋ 2.25
+  gjson-v ██████████████▋ 2.09
      json ▓▓▓▓▓▓▓ 1.00
        oj >>> not supported <<<
  simdjson >>> not supported <<<
 
 Unmarshal single JSON record, read all keys
-     json.Unmarshal          24506 ns/op        17216 B/op           82 allocs/op
-       oj.Unmarshal          22215 ns/op         9354 B/op          456 allocs/op
- fastjson.Unmarshal           8175 ns/op        13608 B/op           73 allocs/op
- jsoniter.Unmarshal           9249 ns/op        14530 B/op           84 allocs/op
- simdjson.Unmarshal          19734 ns/op       130665 B/op           17 allocs/op
-    gjson.Unmarshal          12397 ns/op        18336 B/op           76 allocs/op
-  gjson-v.Unmarshal          15443 ns/op        18336 B/op           76 allocs/op
-    sonic.Unmarshal          13726 ns/op        27671 B/op           59 allocs/op
-  sonic-v.Unmarshal          15804 ns/op        27643 B/op           59 allocs/op
+     json.Unmarshal          24595 ns/op        17216 B/op           82 allocs/op
+       oj.Unmarshal          22730 ns/op         9348 B/op          456 allocs/op
+ fastjson.Unmarshal           8403 ns/op        13608 B/op           73 allocs/op
+ jsoniter.Unmarshal           9441 ns/op        14534 B/op           84 allocs/op
+    goccy.Unmarshal           7619 ns/op        16697 B/op            7 allocs/op
+ simdjson.Unmarshal          19913 ns/op       130664 B/op           17 allocs/op
+    gjson.Unmarshal          14295 ns/op        18336 B/op           76 allocs/op
+  gjson-v.Unmarshal          16826 ns/op        18336 B/op           76 allocs/op
+    sonic.Unmarshal          14553 ns/op        27859 B/op           59 allocs/op
+  sonic-v.Unmarshal          16715 ns/op        27844 B/op           59 allocs/op
 
- fastjson ████████████████████▉ 3.00
- jsoniter ██████████████████▌ 2.65
-    gjson █████████████▊ 1.98
-    sonic ████████████▍ 1.79
-  gjson-v ███████████  1.59
-  sonic-v ██████████▊ 1.55
+    goccy ██████████████████████▌ 3.23
+ fastjson ████████████████████▍ 2.93
+ jsoniter ██████████████████▏ 2.61
+    gjson ████████████  1.72
+    sonic ███████████▊ 1.69
+  sonic-v ██████████▎ 1.47
+  gjson-v ██████████▏ 1.46
  simdjson ████████▋ 1.24
-       oj ███████▋ 1.10
+       oj ███████▌ 1.08
      json ▓▓▓▓▓▓▓ 1.00
 
 Unmarshal many JSON records from small file (100MB), read few keys
-     json.Unmarshal      482090147 ns/op    617757333 B/op        39515 allocs/op
+     json.Unmarshal      467372922 ns/op    617757429 B/op        39516 allocs/op
        oj >>> not supported <<<
- fastjson.Unmarshal       79797412 ns/op      2536360 B/op        39514 allocs/op
- jsoniter.Unmarshal      202497253 ns/op     89274800 B/op      3984420 allocs/op
+ fastjson.Unmarshal       80409422 ns/op      2536360 B/op        39514 allocs/op
+ jsoniter.Unmarshal      203534150 ns/op     89303361 B/op      3984434 allocs/op
+    goccy.Unmarshal       95470568 ns/op    106485005 B/op        39865 allocs/op
  simdjson >>> not supported <<<
-    gjson.Unmarshal       83467680 ns/op    106043665 B/op        39456 allocs/op
-  gjson-v.Unmarshal      165406999 ns/op    106043460 B/op        39454 allocs/op
-    sonic.Unmarshal       33466102 ns/op      2885460 B/op        78902 allocs/op
-  sonic-v.Unmarshal      108460594 ns/op      2873907 B/op        78901 allocs/op
+    gjson.Unmarshal       89710635 ns/op    106043480 B/op        39454 allocs/op
+  gjson-v.Unmarshal      178120903 ns/op    106043456 B/op        39454 allocs/op
+    sonic.Unmarshal       36274602 ns/op      2889905 B/op        78902 allocs/op
+  sonic-v.Unmarshal      112625593 ns/op      2877725 B/op        78902 allocs/op
 
-    sonic ████████████████████████████████████████████████████████████████████████████████████████████████████▊ 14.41
- fastjson ██████████████████████████████████████████▎ 6.04
-    gjson ████████████████████████████████████████▍ 5.78
-  sonic-v ███████████████████████████████  4.44
-  gjson-v ████████████████████▍ 2.91
- jsoniter ████████████████▋ 2.38
+    sonic ██████████████████████████████████████████████████████████████████████████████████████████▏ 12.88
+ fastjson ████████████████████████████████████████▋ 5.81
+    gjson ████████████████████████████████████▍ 5.21
+    goccy ██████████████████████████████████▎ 4.90
+  sonic-v █████████████████████████████  4.15
+  gjson-v ██████████████████▎ 2.62
+ jsoniter ████████████████  2.30
      json ▓▓▓▓▓▓▓ 1.00
        oj >>> not supported <<<
  simdjson >>> not supported <<<
 
 Unmarshal many JSON records from small file (100MB), read all keys
-     json.Unmarshal      782114089 ns/op   1342711664 B/op     14015499 allocs/op
-       oj.Unmarshal      480794580 ns/op    240450586 B/op     15464546 allocs/op
- fastjson.Unmarshal      213254770 ns/op     66615228 B/op      2879959 allocs/op
- jsoniter.Unmarshal      708829163 ns/op    819204196 B/op     19105088 allocs/op
- simdjson.Unmarshal      414385352 ns/op   1470573650 B/op     14804672 allocs/op
-    gjson.Unmarshal      394035758 ns/op    196303136 B/op      2998129 allocs/op
-  gjson-v.Unmarshal      480439662 ns/op    196303152 B/op      2998129 allocs/op
-    sonic.Unmarshal      480761215 ns/op    900554709 B/op      2249814 allocs/op
-  sonic-v.Unmarshal      560824459 ns/op    899300576 B/op      2249792 allocs/op
+     json.Unmarshal      757494156 ns/op   1342729920 B/op     14015563 allocs/op
+       oj.Unmarshal      501369057 ns/op    240450688 B/op     15464546 allocs/op
+ fastjson.Unmarshal      220172734 ns/op     66615596 B/op      2879963 allocs/op
+ jsoniter.Unmarshal      755346954 ns/op    819583812 B/op     19105381 allocs/op
+    goccy.Unmarshal      685287052 ns/op    878252572 B/op     16664028 allocs/op
+ simdjson.Unmarshal      410207186 ns/op   1470567216 B/op     14804656 allocs/op
+    gjson.Unmarshal      439777900 ns/op    196303728 B/op      2998133 allocs/op
+  gjson-v.Unmarshal      538387229 ns/op    196303792 B/op      2998135 allocs/op
+    sonic.Unmarshal      489889139 ns/op    904561938 B/op      2249997 allocs/op
+  sonic-v.Unmarshal      579777682 ns/op    903219324 B/op      2249947 allocs/op
 
- fastjson █████████████████████████▋ 3.67
-    gjson █████████████▉ 1.98
- simdjson █████████████▏ 1.89
-  gjson-v ███████████▍ 1.63
-    sonic ███████████▍ 1.63
-       oj ███████████▍ 1.63
-  sonic-v █████████▊ 1.39
- jsoniter ███████▋ 1.10
+ fastjson ████████████████████████  3.44
+ simdjson ████████████▉ 1.85
+    gjson ████████████  1.72
+    sonic ██████████▊ 1.55
+       oj ██████████▌ 1.51
+  gjson-v █████████▊ 1.41
+  sonic-v █████████▏ 1.31
+    goccy ███████▋ 1.11
+ jsoniter ███████  1.00
      json ▓▓▓▓▓▓▓ 1.00
 
 Unmarshal many JSON records from semi-large file (5GB), read few keys
-     json.Unmarshal     7331440390 ns/op   9001289600 B/op       585114 allocs/op
+     json.Unmarshal     7028787487 ns/op   9001289600 B/op       585114 allocs/op
        oj >>> not supported <<<
- fastjson.Unmarshal     1177966402 ns/op     37538344 B/op       585883 allocs/op
- jsoniter.Unmarshal     3218532432 ns/op   1328420600 B/op     59089318 allocs/op
+ fastjson.Unmarshal     1196543679 ns/op     37538544 B/op       585886 allocs/op
+ jsoniter.Unmarshal     3111312902 ns/op   1328907144 B/op     59089570 allocs/op
+    goccy.Unmarshal     1463383591 ns/op   1579021392 B/op       590757 allocs/op
  simdjson >>> not supported <<<
-    gjson.Unmarshal     1332135754 ns/op   1572574624 B/op       585080 allocs/op
-  gjson-v.Unmarshal     2559855514 ns/op   1572576736 B/op       585102 allocs/op
-    sonic.Unmarshal      504974529 ns/op     42776172 B/op      1170117 allocs/op
-  sonic-v.Unmarshal     1596212163 ns/op     42696208 B/op      1170111 allocs/op
+    gjson.Unmarshal     1396538882 ns/op   1572579712 B/op       585133 allocs/op
+  gjson-v.Unmarshal     2666036228 ns/op   1572577696 B/op       585112 allocs/op
+    sonic.Unmarshal      545581639 ns/op     42888076 B/op      1170121 allocs/op
+  sonic-v.Unmarshal     1663471749 ns/op     42665216 B/op      1170116 allocs/op
 
-    sonic █████████████████████████████████████████████████████████████████████████████████████████████████████▋ 14.52
- fastjson ███████████████████████████████████████████▌ 6.22
-    gjson ██████████████████████████████████████▌ 5.50
-  sonic-v ████████████████████████████████▏ 4.59
-  gjson-v ████████████████████  2.86
- jsoniter ███████████████▉ 2.28
+    sonic ██████████████████████████████████████████████████████████████████████████████████████████▏ 12.88
+ fastjson █████████████████████████████████████████  5.87
+    gjson ███████████████████████████████████▏ 5.03
+    goccy █████████████████████████████████▌ 4.80
+  sonic-v █████████████████████████████▌ 4.23
+  gjson-v ██████████████████▍ 2.64
+ jsoniter ███████████████▊ 2.26
      json ▓▓▓▓▓▓▓ 1.00
        oj >>> not supported <<<
  simdjson >>> not supported <<<
 
 Unmarshal many JSON records from semi-large file (5GB), read all keys
-     json.Unmarshal    11638924518 ns/op  19753331088 B/op    207850030 allocs/op
-       oj.Unmarshal     7193921166 ns/op   3569293936 B/op    229339958 allocs/op
- fastjson.Unmarshal     3197459131 ns/op    987638968 B/op     42708261 allocs/op
- jsoniter.Unmarshal    10662782266 ns/op  12149748248 B/op    283330412 allocs/op
- simdjson.Unmarshal     5502750873 ns/op  14807057816 B/op    219552682 allocs/op
-    gjson.Unmarshal     5694964297 ns/op   2911123344 B/op     44462433 allocs/op
-  gjson-v.Unmarshal     7001723533 ns/op   2911123376 B/op     44462433 allocs/op
-    sonic.Unmarshal     5389681619 ns/op  13035730336 B/op     33346898 allocs/op
-  sonic-v.Unmarshal     6592474782 ns/op  13035485456 B/op     33346902 allocs/op
+     json.Unmarshal    11291821787 ns/op  19753431152 B/op    207850380 allocs/op
+       oj.Unmarshal     7426905731 ns/op   3569351040 B/op    229340164 allocs/op
+ fastjson.Unmarshal     3240012592 ns/op    987634936 B/op     42708213 allocs/op
+ jsoniter.Unmarshal    11143600359 ns/op  12153694288 B/op    283332233 allocs/op
+    goccy.Unmarshal    10126664531 ns/op  13022527440 B/op    247124111 allocs/op
+ simdjson.Unmarshal     5451909233 ns/op  14796781456 B/op    219553417 allocs/op
+    gjson.Unmarshal     6156039514 ns/op   2911123376 B/op     44462433 allocs/op
+  gjson-v.Unmarshal     7503099686 ns/op   2911123344 B/op     44462433 allocs/op
+    sonic.Unmarshal     5448013537 ns/op  13035648944 B/op     33346902 allocs/op
+  sonic-v.Unmarshal     6740288756 ns/op  13035567200 B/op     33346902 allocs/op
 
- fastjson █████████████████████████▍ 3.64
-    sonic ███████████████  2.16
- simdjson ██████████████▊ 2.12
-    gjson ██████████████▎ 2.04
-  sonic-v ████████████▎ 1.77
-  gjson-v ███████████▋ 1.66
-       oj ███████████▎ 1.62
- jsoniter ███████▋ 1.09
+ fastjson ████████████████████████▍ 3.49
+    sonic ██████████████▌ 2.07
+ simdjson ██████████████▍ 2.07
+    gjson ████████████▊ 1.83
+  sonic-v ███████████▋ 1.68
+       oj ██████████▋ 1.52
+  gjson-v ██████████▌ 1.50
+    goccy ███████▊ 1.12
+ jsoniter ███████  1.01
      json ▓▓▓▓▓▓▓ 1.00
 
 Marshal custom data through an object builder
-     json.Marshal             1014 ns/op          688 B/op           17 allocs/op
-       oj.Builder              814 ns/op         1128 B/op           17 allocs/op
- fastjson.Marshal              574 ns/op          679 B/op            6 allocs/op
- jsoniter.Marshal              499 ns/op          432 B/op            7 allocs/op
+     json.Marshal             1009 ns/op          688 B/op           17 allocs/op
+       oj.Builder              825 ns/op         1128 B/op           17 allocs/op
+ fastjson.Marshal              583 ns/op          679 B/op            6 allocs/op
+ jsoniter.Marshal              484 ns/op          432 B/op            7 allocs/op
+    goccy.Marshal              548 ns/op          416 B/op            2 allocs/op
  simdjson >>> not supported <<<
-    gjson.Marshal             1696 ns/op         3600 B/op           32 allocs/op
+    gjson.Marshal             1730 ns/op         3600 B/op           32 allocs/op
   gjson-v >>> not supported <<<
-    sonic.Marshal              692 ns/op         1803 B/op           14 allocs/op
+    sonic.Marshal              693 ns/op         1803 B/op           14 allocs/op
   sonic-v >>> not supported <<<
 
- jsoniter ██████████████▏ 2.03
- fastjson ████████████▎ 1.77
-    sonic ██████████▎ 1.47
-       oj ████████▋ 1.25
+ jsoniter ██████████████▌ 2.08
+    goccy ████████████▉ 1.84
+ fastjson ████████████  1.73
+    sonic ██████████▏ 1.46
+       oj ████████▌ 1.22
      json ▓▓▓▓▓▓▓ 1.00
-    gjson ████▏ 0.60
+    gjson ████  0.58
  simdjson >>> not supported <<<
   gjson-v >>> not supported <<<
   sonic-v >>> not supported <<<
