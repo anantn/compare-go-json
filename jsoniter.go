@@ -3,9 +3,7 @@
 package main
 
 import (
-	"bytes"
 	"errors"
-	"io/ioutil"
 	"log"
 	"os"
 	"testing"
@@ -16,33 +14,19 @@ import (
 var jsoniterPkg = pkg{
 	name: "jsoniter",
 	calls: map[string]*call{
-		"parse":            {name: "Unmarshal", fun: jsoniterUnmarshal},
-		"validate":         {name: "Valid", fun: jsoniterValid},
-		"decode":           {name: "Decode", fun: jsoniterDecode},
-		"unmarshal-struct": {name: "Unmarshal", fun: jsoniterUnmarshalPatient},
-		"marshal":          {name: "Marshal", fun: jsoniterMarshal},
-		"marshal-struct":   {name: "Marshal", fun: jsoniterMarshalPatient},
-		"marshal-custom":   {name: "Marshal", fun: jsoniterMarshalCustom},
-		"file1":            {name: "Decode", fun: jsoniterFile1},
-		"small-file":       {name: "Decode", fun: jsoniterFileManySmall},
-		"large-file":       {name: "Decode", fun: jsoniterFileManyLarge},
+		"validate-bytes":                {name: "Valid", fun: jsoniterValid},
+		"unmarshal-single-few-keys":     {name: "Unmarshal", fun: jsoniterFile1},
+		"unmarshal-single-all-keys":     {name: "Unmarshal", fun: jsoniterUnmarshalPatient},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: jsoniterFileManySmall},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: jsoniterFileManySmall},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: jsoniterFileManyLarge},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: jsoniterFileManyLarge},
+		"marshal-builder":               {name: "Marshal", fun: jsoniterMarshalBuilder},
 	},
 }
 
-func jsoniterUnmarshal(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
-	b.ResetTimer()
-
-	var result interface{}
-	for n := 0; n < b.N; n++ {
-		if benchErr = jsoniter.Unmarshal(sample, &result); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
 func jsoniterValid(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
+	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		if !jsoniter.Valid(sample) {
@@ -52,22 +36,8 @@ func jsoniterValid(b *testing.B) {
 	}
 }
 
-func jsoniterDecode(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
-	b.ResetTimer()
-
-	var data interface{}
-	for n := 0; n < b.N; n++ {
-		dec := jsoniter.NewDecoder(bytes.NewReader(sample))
-		if err := dec.Decode(&data); err != nil {
-			benchErr = err
-			b.Fail()
-		}
-	}
-}
-
 func jsoniterUnmarshalPatient(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
+	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 
 	var patient Patient
@@ -78,17 +48,7 @@ func jsoniterUnmarshalPatient(b *testing.B) {
 	}
 }
 
-func jsoniterMarshal(b *testing.B) {
-	data := loadSample()
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = jsoniter.Marshal(data); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
-func jsoniterMarshalCustom(b *testing.B) {
+func jsoniterMarshalBuilder(b *testing.B) {
 	var data interface{}
 	err := jsoniter.UnmarshalFromString(`{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}`, &data)
 	if err != nil {
@@ -99,20 +59,6 @@ func jsoniterMarshalCustom(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		if _, benchErr = jsoniter.Marshal(data); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
-func jsoniterMarshalPatient(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
-	var patient Patient
-	if err := jsoniter.Unmarshal(sample, &patient); err != nil {
-		log.Fatal(err)
-	}
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = jsoniter.Marshal(&patient); benchErr != nil {
 			b.Fail()
 		}
 	}

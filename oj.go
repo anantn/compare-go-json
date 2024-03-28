@@ -3,13 +3,12 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/ohler55/ojg"
 	"github.com/ohler55/ojg/jp"
 	"github.com/ohler55/ojg/oj"
 )
@@ -17,32 +16,19 @@ import (
 var ojPkg = pkg{
 	name: "oj",
 	calls: map[string]*call{
-		"parse":            {name: "Parse", fun: ojParse},
-		"validate":         {name: "Validate", fun: ojValidate},
-		"decode":           {name: "Tokenize", fun: ojTokenize},
-		"unmarshal-struct": {name: "Unmarshal", fun: ojUnmarshalPatient},
-		"marshal":          {name: "JSON", fun: ojJSON},
-		"marshal-struct":   {name: "Marshal", fun: ojMarshalPatient},
-		"marshal-custom":   {name: "Builder", fun: ojMarshalCustom},
-		"file1":            {name: "ParseReader", fun: ojFile1},
-		"small-file":       {name: "ParseReader", fun: ojFileManySmallLoad},
-		"large-file":       {name: "ParseReader", fun: ojFileManyLarge},
+		"validate-bytes":                {name: "Validate", fun: ojValidate},
+		"unmarshal-single-few-keys":     {name: "Unmarshal", fun: ojFile1},
+		"unmarshal-single-all-keys":     {name: "Unmarshal", fun: ojUnmarshalPatient},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: ojFileManySmallLoad},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: ojFileManySmallLoad},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: ojFileManyLarge},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: ojFileManyLarge},
+		"marshal-builder":               {name: "Builder", fun: ojMarshalBuilder},
 	},
 }
 
-func ojParse(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
-	b.ResetTimer()
-	p := &oj.Parser{Reuse: true}
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = p.Parse(sample); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
 func ojValidate(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
+	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 	var v oj.Validator
 	for n := 0; n < b.N; n++ {
@@ -53,7 +39,7 @@ func ojValidate(b *testing.B) {
 }
 
 func ojUnmarshalPatient(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
+	sample, _ := os.ReadFile(filename)
 	p := oj.Parser{Reuse: true}
 	b.ResetTimer()
 	var out Patient
@@ -64,43 +50,7 @@ func ojUnmarshalPatient(b *testing.B) {
 	}
 }
 
-func ojTokenize(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
-	b.ResetTimer()
-	h := oj.ZeroHandler{}
-	t := oj.Tokenizer{}
-	for n := 0; n < b.N; n++ {
-		if err := t.Parse(sample, &h); err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func ojJSON(b *testing.B) {
-	data := loadSample()
-	wr := oj.Writer{Options: ojg.Options{OmitNil: true}}
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		_ = wr.MustJSON(data)
-	}
-}
-
-func ojMarshalPatient(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
-	var patient Patient
-	if err := oj.Unmarshal(sample, &patient); err != nil {
-		log.Fatal(err)
-	}
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		//_ = wr.MustJSON(&patient)
-		if _, err := oj.Marshal(&patient); err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func ojMarshalCustom(b *testing.B) {
+func ojMarshalBuilder(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		var bu oj.Builder
@@ -139,7 +89,7 @@ func ojFile1(b *testing.B) {
 	p := &oj.Parser{Reuse: true}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		j, _ := ioutil.ReadAll(f)
+		j, _ := io.ReadAll(f)
 		var result any
 		if result, benchErr = p.Parse(j); benchErr != nil {
 			b.Fail()
@@ -151,50 +101,6 @@ func ojFile1(b *testing.B) {
 				benchErr = err
 				b.Fail()
 			}
-		}
-	}
-}
-
-func ojFileManySmallChan(b *testing.B) {
-	f := openSmallLogFile()
-	defer func() { _ = f.Close() }()
-
-	rc := make(chan interface{}, 1000)
-	ready := make(chan bool)
-	go func() {
-		ready <- true
-		for {
-			if v := <-rc; v == nil {
-				break
-			}
-		}
-	}()
-	<-ready
-	b.ResetTimer()
-
-	var p oj.Parser
-	for n := 0; n < b.N; n++ {
-		_, _ = f.Seek(0, 0)
-		if _, benchErr = p.ParseReader(f, rc); benchErr != nil {
-			b.Fail()
-		}
-	}
-	rc <- nil
-}
-
-func ojCb(_ interface{}) bool {
-	return false
-}
-
-func ojFileManySmallReader(b *testing.B) {
-	f := openSmallLogFile()
-	defer func() { _ = f.Close() }()
-	b.ResetTimer()
-	p := &oj.Parser{Reuse: true}
-	for n := 0; n < b.N; n++ {
-		_, _ = f.Seek(0, 0)
-		if _, benchErr = p.ParseReader(f, ojCb); benchErr != nil {
-			b.Fail()
 		}
 	}
 }

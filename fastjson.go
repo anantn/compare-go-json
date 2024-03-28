@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"testing"
@@ -18,16 +17,28 @@ import (
 var fastjsonPkg = pkg{
 	name: "fastjson",
 	calls: map[string]*call{
-		"validate":       {name: "Valid", fun: fastjsonValidate},
-		"marshal-custom": {name: "Marshal", fun: fastjsonMarshalCustom},
-		"file1":          {name: "Decode", fun: fastjsonFile1},
-		"small-file":     {name: "Decode", fun: fastjsonFileManySmall},
-		"large-file":     {name: "Decode", fun: fastjsonFileManyLarge},
+		"validate-bytes":            {name: "Validate", fun: fastjsonValidate},
+		"validate-string":           {name: "Validate", fun: fastjsonValidateString},
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: fastjsonFile1},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: fastjsonFile1All},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFileMany(b, openSmallLogFile(), 39449)
+		}},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFileManyAll(b, openSmallLogFile(), 39449)
+		}},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFileMany(b, openLargeLogFile(), 585032)
+		}},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFileManyAll(b, openLargeLogFile(), 585032)
+		}},
+		"marshal-builder": {name: "Marshal", fun: fastjsonMarshalBuilder},
 	},
 }
 
 func fastjsonValidate(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
+	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
@@ -37,7 +48,18 @@ func fastjsonValidate(b *testing.B) {
 	}
 }
 
-func fastjsonMarshalCustom(b *testing.B) {
+func fastjsonValidateString(b *testing.B) {
+	sample, _ := os.ReadFile(filename)
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		if benchErr = fastjson.Validate(string(sample)); benchErr != nil {
+			b.Fail()
+		}
+	}
+}
+
+func fastjsonMarshalBuilder(b *testing.B) {
 	//{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
 	var a fastjson.Arena
 	b.ResetTimer()
@@ -93,42 +115,118 @@ func fastjsonFile1(b *testing.B) {
 	}
 }
 
-func fastjsonFileManySmall(b *testing.B) {
-	fastjsonCheckFileValues(b, openSmallLogFile())
-}
-
-func fastjsonFileManyLarge(b *testing.B) {
-	fastjsonCheckFileValues(b, openLargeLogFile())
-}
-
-func fastjsonCheckFileValues(b *testing.B, f *os.File) {
+func fastjsonFile1All(b *testing.B) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Failed to read %s. %s\n", filename, err)
+	}
 	defer func() { _ = f.Close() }()
 
-	var sc fastjson.Scanner
+	var p fastjson.Parser
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_, _ = f.Seek(0, 0)
+		j, _ := io.ReadAll(f)
+		if val, err := p.ParseBytes(j); err != nil {
+			benchErr = err
+			b.Fail()
+		} else {
+			if val.Type() != fastjson.TypeObject {
+				benchErr = fmt.Errorf("expected object, got %s", val.Type())
+				b.Fail()
+			}
+			root, _ := val.Object()
+			root.Visit(fastjsonVisitChildren)
+			if fastjsonVisitCount != 116 {
+				benchErr = fmt.Errorf("expected 116 children, got %d", fastjsonVisitCount)
+				b.Fail()
+			}
+			if fastjsonValueHolder == nil {
+				benchErr = fmt.Errorf("expected a value, got nil")
+				b.Fail()
+			}
+			fastjsonVisitCount = 0
+			fastjsonValueHolder = nil
+		}
+	}
+}
+
+// Store values to avoid compiler optimizations
+var fastjsonVisitCount int
+var fastjsonValueHolder *fastjson.Value
+var fastjsonManyRecordCount int
+
+func fastjsonVisitChildren(k []byte, v *fastjson.Value) {
+	fastjsonValueHolder = v
+	fastjsonVisitCount++
+	switch v.Type() {
+	case fastjson.TypeObject:
+		children, _ := v.Object()
+		children.Visit(fastjsonVisitChildren)
+	case fastjson.TypeArray:
+		children, _ := v.Array()
+		for _, child := range children {
+			fastjsonVisitChildren(k, child)
+		}
+	}
+}
+
+func fastjsonFileMany(b *testing.B, f *os.File, count int) {
+	defer func() { _ = f.Close() }()
+	fastjsonCheckFileValues(b, f, count, func(val *fastjson.Value) {
+		whatval := val.GetStringBytes("what")
+		whereval := val.GetInt("where", "0", "line")
+		err := checkLog(string(whatval), whereval)
+		if err != nil {
+			benchErr = err
+			b.Fail()
+		}
+	})
+}
+
+func fastjsonFileManyAll(b *testing.B, f *os.File, count int) {
+	defer func() { _ = f.Close() }()
+	fastjsonCheckFileValues(b, f, count, func(val *fastjson.Value) {
+		obj, _ := val.Object()
+		obj.Visit(fastjsonVisitChildren)
+		if fastjsonVisitCount != 125 {
+			benchErr = fmt.Errorf("expected 125 children, got %d", fastjsonVisitCount)
+			b.Fail()
+		}
+		if fastjsonValueHolder == nil {
+			benchErr = fmt.Errorf("expected a value, got nil")
+			b.Fail()
+		}
+		fastjsonVisitCount = 0
+		fastjsonValueHolder = nil
+	})
+}
+
+func fastjsonCheckFileValues(b *testing.B, f *os.File, count int, cb func(*fastjson.Value)) {
+	defer func() { _ = f.Close() }()
+
+	var p fastjson.Parser
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
-			sc.InitBytes(buf.Bytes())
-			for sc.Next() {
-				val := sc.Value()
-				if err := sc.Error(); err != nil {
-					benchErr = err
-					b.Fail()
-				}
+			if val, err := p.ParseBytes(buf.Bytes()); err != nil {
+				benchErr = err
+				b.Fail()
+			} else {
 				if val.Type() != fastjson.TypeObject {
 					benchErr = fmt.Errorf("expected object, got %s", val.Type())
 					b.Fail()
 				}
-				whatval := val.GetStringBytes("what")
-				whereval := val.GetInt("where", "0", "line")
-				err := checkLog(string(whatval), whereval)
-				if err != nil {
-					benchErr = err
-					b.Fail()
-				}
+				fastjsonManyRecordCount++
+				cb(val)
 			}
 		}
+		if fastjsonManyRecordCount != count {
+			benchErr = fmt.Errorf("expected %d records, got %d", count, fastjsonManyRecordCount)
+			b.Fail()
+		}
+		fastjsonManyRecordCount = 0
 	}
 }

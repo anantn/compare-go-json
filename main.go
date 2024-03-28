@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -74,12 +73,6 @@ type suite struct {
 	ref   string // reference package for the suite
 }
 
-type noWriter int
-
-func (w noWriter) Write(b []byte) (int, error) {
-	return len(b), nil
-}
-
 func main() {
 	testing.Init()
 	flag.Parse()
@@ -97,16 +90,15 @@ func main() {
 		&sonicPkg,
 	}
 	for _, s := range []*suite{
-		{fun: "parse", title: "Parse string/[]byte to simple go types ([]interface{}, int64, string, etc)", ref: "json"},
-		{fun: "validate", title: "Validate string/[]byte", ref: "json"},
-		{fun: "decode", title: "Iterate tokens in a string/[]byte", ref: "json"},
-		{fun: "unmarshal-struct", title: "Unmarshal string/[]byte to a struct", ref: "json"},
-		{fun: "marshal", title: "Marshal simple types to string/[]byte", ref: "json"},
-		{fun: "marshal-struct", title: "Marshal a struct to string/[]byte", ref: "json"},
-		{fun: "marshal-custom", title: "Marshal custom data with a builder", ref: "json"},
-		{fun: "file1", title: "Read from single JSON file", ref: "json"},
-		{fun: "small-file", title: "Read multiple JSON in a small log file (100MB)", ref: "json"},
-		{fun: "large-file", title: "Read multiple JSON in a semi large log file (5GB)", ref: "json"},
+		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},
+		{fun: "validate-string", title: "Validate string", ref: "json"},
+		{fun: "unmarshal-single-few-keys", title: "Unmarshal single JSON record, read few keys", ref: "json"},
+		{fun: "unmarshal-single-all-keys", title: "Unmarshal single JSON record, read all keys", ref: "json"},
+		{fun: "unmarshal-small-file-few-keys", title: "Unmarshal many JSON records from small file (100MB), read few keys", ref: "json"},
+		{fun: "unmarshal-small-file-all-keys", title: "Unmarshal many JSON records from small file (100MB), read all keys", ref: "json"},
+		{fun: "unmarshal-large-file-few-keys", title: "Unmarshal many JSON records from semi-large file (5GB), read few keys", ref: "json"},
+		{fun: "unmarshal-large-file-all-keys", title: "Unmarshal many JSON records from semi-large file (5GB), read all keys", ref: "json"},
+		{fun: "marshal-builder", title: "Marshal custom data through an object builder", ref: "json"},
 	} {
 		s.exec(pkgs)
 	}
@@ -188,20 +180,6 @@ func (s *suite) exec(pkgs []*pkg) {
 	}
 }
 
-func loadSample() (data interface{}) {
-	f, err := os.Open(filename)
-	if err != nil {
-		log.Fatalf("Failed to load %s. %s\n", filename, err)
-	}
-	defer func() { _ = f.Close() }()
-
-	var p oj.Parser
-	if data, err = p.ParseReader(f); err != nil {
-		log.Fatalf("Failed to parse %s. %s\n", filename, err)
-	}
-	return
-}
-
 func openSmallLogFile() *os.File {
 	f, err := os.Open(smallLogFile)
 	if err != nil {
@@ -236,6 +214,11 @@ func createLogFile(filename string, size int) error {
 	}
 	defer func() { _ = f.Close() }()
 
+	// Repeat of patient
+	patientMinify := []byte(`{"resourceType":"Patient","id":"example","text":{"status":"generated","div":"<div xmlns=\"http://www.w3.org/1999/xhtml\">\n\t\t\t<table>\n\t\t\t\t<tbody>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Name</td>\n\t\t\t\t\t\t<td>Peter James \n              <b>Chalmers</b> (&quot;Jim&quot;)\n            </td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Address</td>\n\t\t\t\t\t\t<td>534 Erewhon, Pleasantville, Vic, 3999</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Contacts</td>\n\t\t\t\t\t\t<td>Home: unknown. Work: (03) 5555 6473</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Id</td>\n\t\t\t\t\t\t<td>MRN: 12345 (Acme Healthcare)</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t</div>"},"identifier":[{"use":"usual","type":{"coding":[{"system":"http://terminology.hl7.org/CodeSystem/v2-0203","code":"MR"}]},"system":"urn:oid:1.2.36.146.595.217.0.1","value":"12345","period":{"start":"2001-05-06"},"assigner":{"display":"Acme Healthcare"}}],"active":true,"name":[{"use":"official","family":"Chalmers","given":["Peter","James"]},{"use":"usual","given":["Jim"]},{"use":"maiden","family":"Windsor","given":["Peter","James"],"period":{"end":"2002"}}],"telecom":[{"use":"home"},{"system":"phone","value":"(03) 5555 6473","use":"work","rank":1},{"system":"phone","value":"(03) 3410 5613","use":"mobile","rank":2},{"system":"phone","value":"(03) 5555 8834","use":"old","period":{"end":"2014"}}],"gender":"male","birthDate":"1974-12-25","_birthDate":{"extension":[{"url":"http://hl7.org/fhir/StructureDefinition/patient-birthTime","valueDateTime":"1974-12-25T14:35:45-05:00"}]},"deceasedBoolean":false,"address":[{"use":"home","type":"both","text":"534 Erewhon St PeasantVille, Rainbow, Vic  3999","line":["534 Erewhon St"],"city":"PleasantVille","district":"Rainbow","state":"Vic","postalCode":"3999","period":{"start":"1974-12-25"}}],"contact":[{"relationship":[{"coding":[{"system":"http://terminology.hl7.org/CodeSystem/v2-0131","code":"N"}]}],"name":{"family":"du Marché","_family":{"extension":[{"url":"http://hl7.org/fhir/StructureDefinition/humanname-own-prefix","valueString":"VV"}]},"given":["Bénédicte"]},"telecom":[{"system":"phone","value":"+33 (237) 998327"}],"address":{"use":"home","type":"both","line":["534 Erewhon St"],"city":"PleasantVille","district":"Rainbow","state":"Vic","postalCode":"3999","period":{"start":"1974-12-25"}},"gender":"female","period":{"start":"2012"}}],"managingOrganization":{"reference":"Organization/1"}}`)
+	var patientData interface{}
+	oj.Unmarshal(patientMinify, &patientData)
+
 	// Build a log entry.
 	var b oj.Builder
 	_ = b.Object()
@@ -249,6 +232,7 @@ func createLogFile(filename string, size int) error {
 	b.Pop()
 	_ = b.Value("benchmark-application", "who")
 	_ = b.Value("INFO", "level")
+	_ = b.Value(patientData, "patient")
 	b.PopAll()
 	entry := b.Result()
 
@@ -303,7 +287,7 @@ func getSpecs() (s *specs) {
 		if 1 < len(parts) {
 			s.os = string(strings.TrimSpace(parts[1]))
 		}
-		if out, err = ioutil.ReadFile("/proc/cpuinfo"); err == nil {
+		if out, err = os.ReadFile("/proc/cpuinfo"); err == nil {
 			cnt := 0
 			for _, line := range strings.Split(string(out), "\n") {
 				if strings.Contains(line, "processor") {
@@ -330,7 +314,7 @@ func getSpecs() (s *specs) {
 				s.cores = fmt.Sprintf("%d", cnt)
 			}
 		}
-		if out, err = ioutil.ReadFile("/proc/meminfo"); err == nil {
+		if out, err = os.ReadFile("/proc/meminfo"); err == nil {
 			for _, line := range strings.Split(string(out), "\n") {
 				if strings.Contains(line, "MemTotal") {
 					parts := strings.Split(line, ":")
@@ -373,6 +357,7 @@ func checkLog(what string, where int) error {
 }
 
 func checkMarshalCustom(data string) error {
+	// Account for minification/spacing differences
 	if len(data) < 170 || len(data) > 180 {
 		return fmt.Errorf("expected 170-180 bytes, got %d", len(data))
 	}

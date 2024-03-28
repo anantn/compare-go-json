@@ -5,8 +5,8 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"testing"
@@ -19,29 +19,28 @@ import (
 var gjsonPkg = pkg{
 	name: "gjson",
 	calls: map[string]*call{
-		"parse":          {name: "ParseBytes", fun: gjsonParse},
-		"validate":       {name: "Validate", fun: gjsonValid},
-		"marshal-custom": {name: "Marshal", fun: gjsonMarshalCustom},
-		"file1":          {name: "Decode", fun: gjsonFile1},
-		"small-file":     {name: "Decode", fun: gjsonFileManySmall},
-		"large-file":     {name: "Decode", fun: gjsonFileManyLarge},
+		"validate-bytes":            {name: "Valid", fun: gjsonValid},
+		"validate-string":           {name: "Valid", fun: gjsonValidString},
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: gjsonFile1},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: gjsonFile1All},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonFileMany(b, openSmallLogFile(), 39449)
+		}},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonFileManyAll(b, openSmallLogFile(), 39449)
+		}},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonFileMany(b, openLargeLogFile(), 585032)
+		}},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonFileMany(b, openLargeLogFile(), 585032)
+		}},
+		"marshal-builder": {name: "Marshal", fun: gjsonMarshalBuilder},
 	},
 }
 
-func gjsonParse(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if !gjson.ValidBytes(sample) {
-			benchErr = errors.New("JSON not valid")
-			b.Fail()
-		}
-		_ = gjson.ParseBytes(sample).Value()
-	}
-}
-
 func gjsonValid(b *testing.B) {
-	sample, _ := ioutil.ReadFile(filename)
+	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 
 	for n := 0; n < b.N; n++ {
@@ -52,7 +51,19 @@ func gjsonValid(b *testing.B) {
 	}
 }
 
-func gjsonMarshalCustom(b *testing.B) {
+func gjsonValidString(b *testing.B) {
+	sample, _ := os.ReadFile(filename)
+	b.ResetTimer()
+
+	for n := 0; n < b.N; n++ {
+		if !gjson.Valid(string(sample)) {
+			benchErr = errors.New("JSON not valid")
+			b.Fail()
+		}
+	}
+}
+
+func gjsonMarshalBuilder(b *testing.B) {
 	//{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -80,12 +91,7 @@ func gjsonFile1(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		v := string(j)
-		if !gjson.Valid(v) {
-			benchErr = errors.New("JSON not valid")
-			b.Fail()
-		}
-		result := gjson.Parse(v)
+		result := gjson.ParseBytes(j)
 		if !result.IsObject() {
 			benchErr = errors.New("expected object")
 			b.Fail()
@@ -102,28 +108,92 @@ func gjsonFile1(b *testing.B) {
 	}
 }
 
-func gjsonFileManySmall(b *testing.B) {
-	gjsonCheckFileValues(b, openSmallLogFile())
-}
-
-func gjsonFileManyLarge(b *testing.B) {
-	gjsonCheckFileValues(b, openLargeLogFile())
-}
-
-func gjsonCheckFileValues(b *testing.B, f *os.File) {
+func gjsonFile1All(b *testing.B) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Failed to read %s. %s\n", filename, err)
+	}
 	defer func() { _ = f.Close() }()
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			v := scanner.Text()
-			if !gjson.Valid(v) {
-				benchErr = errors.New("JSON not valid")
+		j, _ := io.ReadAll(f)
+		result := gjson.ParseBytes(j)
+		if !result.IsObject() {
+			benchErr = errors.New("expected object")
+			b.Fail()
+		} else {
+			result.ForEach(gjsonVisitChildren)
+			if gjsonVisitCount != 116 {
+				benchErr = fmt.Errorf("expected 116 children, got %d", gjsonVisitCount)
 				b.Fail()
 			}
-			if result := gjson.Parse(v); !result.IsObject() {
+			if !gjsonValueHolder.Exists() {
+				benchErr = fmt.Errorf("expected a value, got nil")
+				b.Fail()
+			}
+			gjsonVisitCount = 0
+			gjsonValueHolder = gjson.Result{}
+		}
+	}
+}
+
+// Store values to avoid compiler optimizations
+var gjsonVisitCount int
+var gjsonValueHolder gjson.Result
+var gjsonRecordCount int
+
+func gjsonVisitChildren(k, v gjson.Result) bool {
+	gjsonValueHolder = v
+	gjsonVisitCount++
+	if v.IsObject() || v.IsArray() {
+		v.ForEach(gjsonVisitChildren)
+	}
+	return true
+}
+
+func gjsonFileMany(b *testing.B, f *os.File, count int) {
+	defer func() { _ = f.Close() }()
+	gjsonCheckFileValues(b, f, count, func(result gjson.Result) {
+		whatval := result.Get("what").String()
+		whereval := result.Get("where.0.line").Int()
+		err := checkLog(whatval, int(whereval))
+		if err != nil {
+			benchErr = err
+			b.Fail()
+		}
+	})
+}
+
+func gjsonFileManyAll(b *testing.B, f *os.File, count int) {
+	defer func() { _ = f.Close() }()
+	gjsonCheckFileValues(b, f, count, func(result gjson.Result) {
+		result.ForEach(gjsonVisitChildren)
+		if gjsonVisitCount != 125 {
+			benchErr = fmt.Errorf("expected 125 children, got %d", gjsonVisitCount)
+			b.Fail()
+		}
+		if !gjsonValueHolder.Exists() {
+			benchErr = fmt.Errorf("expected a value, got nil")
+			b.Fail()
+		}
+		gjsonVisitCount = 0
+		gjsonValueHolder = gjson.Result{}
+	})
+}
+
+func gjsonCheckFileValues(b *testing.B, f *os.File, count int, cb func(gjson.Result)) {
+	defer func() { _ = f.Close() }()
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		_, _ = f.Seek(0, 0)
+		gjsonRecordCount = 0
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			j := scanner.Bytes()
+			if result := gjson.ParseBytes(j); !result.IsObject() {
 				benchErr = errors.New("expected object")
 				b.Fail()
 			} else {
@@ -131,15 +201,14 @@ func gjsonCheckFileValues(b *testing.B, f *os.File) {
 					benchErr = errors.New("expected object")
 					b.Fail()
 				} else {
-					whatval := result.Get("what").String()
-					whereval := result.Get("where.0.line").Int()
-					err := checkLog(whatval, int(whereval))
-					if err != nil {
-						benchErr = err
-						b.Fail()
-					}
+					cb(result)
 				}
 			}
+			gjsonRecordCount++
+		}
+		if gjsonRecordCount != count {
+			benchErr = fmt.Errorf("expected %d records, got %d", count, gjsonRecordCount)
+			b.Fail()
 		}
 	}
 }

@@ -4,8 +4,8 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -19,29 +19,24 @@ import (
 var sonicPkg = pkg{
 	name: "sonic",
 	calls: map[string]*call{
-		"parse":            {name: "Unmarshal", fun: sonicUnmarshal},
-		"validate":         {name: "Valid", fun: sonicValid},
-		"decode":           {name: "Decode", fun: sonicDecode},
-		"unmarshal-struct": {name: "Unmarshal", fun: sonicUnmarshalPatient},
-		"marshal":          {name: "Marshal", fun: sonicMarshal},
-		"marshal-struct":   {name: "Marshal", fun: sonicMarshalPatient},
-		"marshal-custom":   {name: "Marshal", fun: sonicMarshalCustom},
-		"file1":            {name: "Decode", fun: sonicFile1},
-		"small-file":       {name: "Decode", fun: sonicFileManySmall},
-		"large-file":       {name: "Decode", fun: sonicFileManyLarge},
+		"validate-bytes":            {name: "Valid", fun: sonicValid},
+		"validate-string":           {name: "Valid", fun: sonicValidString},
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: sonicFile1},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: sonicFile1All},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicFileMany(b, openSmallLogFile(), 39449)
+		}},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicFileManyAll(b, openSmallLogFile(), 39449)
+		}},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicFileMany(b, openLargeLogFile(), 585032)
+		}},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicFileMany(b, openLargeLogFile(), 585032)
+		}},
+		"marshal-builder": {name: "Marshal", fun: sonicMarshalBuilder},
 	},
-}
-
-func sonicUnmarshal(b *testing.B) {
-	sample, _ := os.ReadFile(filename)
-	b.ResetTimer()
-
-	var result interface{}
-	for n := 0; n < b.N; n++ {
-		if benchErr = sonic.Unmarshal(sample, &result); benchErr != nil {
-			b.Fail()
-		}
-	}
 }
 
 func sonicValid(b *testing.B) {
@@ -55,57 +50,18 @@ func sonicValid(b *testing.B) {
 	}
 }
 
-func sonicDecode(b *testing.B) {
+func sonicValidString(b *testing.B) {
 	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
-
-	var data interface{}
 	for n := 0; n < b.N; n++ {
-		dec := sonic.ConfigDefault.NewDecoder(bytes.NewReader(sample))
-		if err := dec.Decode(&data); err != nil {
-			benchErr = err
+		if !sonic.ValidString(string(sample)) {
+			benchErr = errors.New("JSON not valid")
 			b.Fail()
 		}
 	}
 }
 
-func sonicUnmarshalPatient(b *testing.B) {
-	sample, _ := os.ReadFile(filename)
-	b.ResetTimer()
-
-	var patient Patient
-	for n := 0; n < b.N; n++ {
-		if benchErr = sonic.Unmarshal(sample, &patient); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
-func sonicMarshal(b *testing.B) {
-	data := loadSample()
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = sonic.Marshal(data); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
-func sonicMarshalPatient(b *testing.B) {
-	sample, _ := os.ReadFile(filename)
-	var patient Patient
-	if err := sonic.Unmarshal(sample, &patient); err != nil {
-		log.Fatal(err)
-	}
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = sonic.Marshal(&patient); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
-func sonicMarshalCustom(b *testing.B) {
+func sonicMarshalBuilder(b *testing.B) {
 	//{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -166,56 +122,114 @@ func sonicFile1(b *testing.B) {
 	}
 }
 
-func sonicFileManySmall(b *testing.B) {
-	f := openSmallLogFile()
+func sonicFile1All(b *testing.B) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Failed to read %s. %s\n", filename, err)
+	}
+	defer func() { _ = f.Close() }()
+	for n := 0; n < b.N; n++ {
+		_, _ = f.Seek(0, 0)
+		j, _ := os.ReadFile(filename)
+		if root, err := sonic.Get(j); err != nil {
+			benchErr = err
+			b.Fail()
+		} else {
+			root.ForEach(sonicVisitChildren)
+			if sonicVisitCount != 116 {
+				benchErr = fmt.Errorf("expected 116 children, got %d", sonicVisitCount)
+				b.Fail()
+			}
+			if sonicValueHolder == nil {
+				benchErr = fmt.Errorf("expected a value, got nil")
+				b.Fail()
+			}
+			sonicVisitCount = 0
+			sonicValueHolder = nil
+		}
+	}
+}
+
+// Store values to avoid compiler optimizations
+var sonicVisitCount int
+var sonicValueHolder *ast.Node
+
+func sonicVisitChildren(path ast.Sequence, node *ast.Node) bool {
+	sonicValueHolder = node
+	sonicVisitCount++
+	if node.Type() == ast.V_OBJECT || node.Type() == ast.V_ARRAY {
+		node.ForEach(sonicVisitChildren)
+	}
+	return true
+}
+
+func sonicFileMany(b *testing.B, f *os.File, count int) {
 	defer func() { _ = f.Close() }()
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
+		sonicRecordCount := 0
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			if root, err := sonic.GetFromString(scanner.Text()); err != nil {
 				benchErr = err
 				b.Fail()
 			} else {
-				sonicCheckFileValues(b, &root)
+				whatval, err := root.Get("what").String()
+				if err != nil {
+					benchErr = err
+					b.Fail()
+				}
+				whereval, err := root.Get("where").Index(0).Get("line").Int64()
+				if err != nil {
+					benchErr = err
+					b.Fail()
+				}
+				if err = checkLog(whatval, int(whereval)); err != nil {
+					benchErr = err
+					b.Fail()
+				}
 			}
+			sonicRecordCount++
+		}
+		if sonicRecordCount != count {
+			benchErr = fmt.Errorf("expected %d records, got %d", count, sonicRecordCount)
+			b.Fail()
 		}
 	}
 }
 
-func sonicFileManyLarge(b *testing.B) {
-	f := openLargeLogFile()
+func sonicFileManyAll(b *testing.B, f *os.File, count int) {
 	defer func() { _ = f.Close() }()
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
+		sonicRecordCount := 0
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			var data interface{}
-			if err := sonic.UnmarshalString(scanner.Text(), &data); err != nil {
+			if root, err := sonic.GetFromString(scanner.Text()); err != nil {
 				benchErr = err
 				b.Fail()
+			} else {
+				sonicVisitCount = 0
+				sonicValueHolder = nil
+				root.ForEach(sonicVisitChildren)
+				if sonicVisitCount != 125 {
+					benchErr = fmt.Errorf("expected 125 children, got %d", sonicVisitCount)
+					b.Fail()
+				}
+				if sonicValueHolder == nil {
+					benchErr = fmt.Errorf("expected a value, got nil")
+					b.Fail()
+				}
 			}
+			sonicRecordCount++
 		}
-	}
-}
-
-func sonicCheckFileValues(b *testing.B, root *ast.Node) {
-	whatval, err := root.Get("what").String()
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-	whereval, err := root.Get("where").Index(0).Get("line").Int64()
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-	if err = checkLog(whatval, int(whereval)); err != nil {
-		benchErr = err
-		b.Fail()
+		if sonicRecordCount != count {
+			benchErr = fmt.Errorf("expected %d records, got %d", count, sonicRecordCount)
+			b.Fail()
+		}
 	}
 }
