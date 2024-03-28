@@ -3,7 +3,6 @@
 package main
 
 import (
-	"errors"
 	"io"
 	"log"
 	"os"
@@ -15,30 +14,10 @@ import (
 var simdjsonPkg = pkg{
 	name: "simdjson",
 	calls: map[string]*call{
-		"validate-bytes":                {name: "Validate", fun: simdjsonValidate},
-		"unmarshal-single-few-keys":     {name: "Unmarshal", fun: simdjsonFile1},
 		"unmarshal-single-all-keys":     {name: "Unmarshal", fun: simdjsonFile1},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: simdjsonFileManySmall},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: simdjsonFileManySmall},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: simdjsonFileManyLarge},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: simdjsonFileManyLarge},
 	},
-}
-
-func simdjsonValidate(b *testing.B) {
-	if !simdjson.SupportedCPU() {
-		benchErr = errors.New("unsupported CPU by simdjson")
-		b.Fail()
-	}
-	sample, _ := os.ReadFile(filename)
-	b.ResetTimer()
-
-	var pj simdjson.ParsedJson
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = simdjson.Parse(sample, &pj); benchErr != nil {
-			b.Fail()
-		}
-	}
 }
 
 func simdjsonFile1(b *testing.B) {

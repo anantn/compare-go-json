@@ -17,18 +17,26 @@ var jsoni = jsoniter.ConfigFastest
 var jsoniterPkg = pkg{
 	name: "jsoniter",
 	calls: map[string]*call{
-		"validate-bytes":                {name: "Valid", fun: jsoniterValid},
-		"unmarshal-single-few-keys":     {name: "Unmarshal", fun: jsoniterFile1},
-		"unmarshal-single-all-keys":     {name: "Unmarshal", fun: jsoniterUnmarshalPatient},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: jsoniterFileManySmall},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: jsoniterFileManySmall},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: jsoniterFileManyLarge},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: jsoniterFileManyLarge},
-		"marshal-builder":               {name: "Marshal", fun: jsoniterMarshalBuilder},
+		"validate-bytes":            {name: "Validate", fun: jsoniterValidate},
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: jsoniterFile1},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: jsoniterFile1All},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileMany(b, openSmallLogFile())
+		}},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileManyAll(b, openSmallLogFile())
+		}},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileMany(b, openLargeLogFile())
+		}},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileManyAll(b, openLargeLogFile())
+		}},
+		"marshal-builder": {name: "Marshal", fun: jsoniterMarshalBuilder},
 	},
 }
 
-func jsoniterValid(b *testing.B) {
+func jsoniterValidate(b *testing.B) {
 	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -39,21 +47,9 @@ func jsoniterValid(b *testing.B) {
 	}
 }
 
-func jsoniterUnmarshalPatient(b *testing.B) {
-	sample, _ := os.ReadFile(filename)
-	b.ResetTimer()
-
-	var patient Patient
-	for n := 0; n < b.N; n++ {
-		if benchErr = jsoni.Unmarshal(sample, &patient); benchErr != nil {
-			b.Fail()
-		}
-	}
-}
-
 func jsoniterMarshalBuilder(b *testing.B) {
 	var data interface{}
-	err := jsoni.UnmarshalFromString(`{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}`, &data)
+	err := jsoni.UnmarshalFromString(getSampleLog(), &data)
 	if err != nil {
 		benchErr = err
 		b.Fail()
@@ -73,55 +69,76 @@ func jsoniterFile1(b *testing.B) {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
 	}
 	defer func() { _ = f.Close() }()
-
 	b.ResetTimer()
+
+	var p PartialPatient
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		var data interface{}
-		if err := jsoni.Unmarshal(j, &data); err != nil {
+		if err := jsoni.Unmarshal(j, &p); err != nil {
 			benchErr = err
 			b.Fail()
 		}
-		obj := data.(map[string]interface{})
-		strtest := obj["identifier"].([]interface{})[0].(map[string]interface{})["type"].(map[string]interface{})["coding"].([]interface{})[0].(map[string]interface{})["code"].(string)
-		arrtest := obj["name"].([]interface{})[2].(map[string]interface{})["given"].([]interface{})
-		booltest := obj["deceasedBoolean"].(bool)
-		if err := checkPatient(strtest, len(arrtest), booltest); err != nil {
+		if err := checkPatientStruct(p); err != nil {
 			benchErr = err
 			b.Fail()
 		}
 	}
 }
 
-func jsoniterFileManySmall(b *testing.B) {
-	jsoniterCheckFileValues(b, openSmallLogFile())
-}
-
-func jsoniterFileManyLarge(b *testing.B) {
-	jsoniterCheckFileValues(b, openLargeLogFile())
-}
-
-func jsoniterCheckFileValues(b *testing.B, f *os.File) {
+func jsoniterFile1All(b *testing.B) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Failed to read %s. %s\n", filename, err)
+	}
 	defer func() { _ = f.Close() }()
-
 	b.ResetTimer()
+
+	var p Patient
+	for n := 0; n < b.N; n++ {
+		_, _ = f.Seek(0, 0)
+		j, _ := io.ReadAll(f)
+		if err := jsoni.Unmarshal(j, &p); err != nil {
+			benchErr = err
+			b.Fail()
+		}
+	}
+}
+
+func jsoniterFileMany(b *testing.B, f *os.File) {
+	defer func() { _ = f.Close() }()
+	b.ResetTimer()
+
+	var l PartialLog
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
-			var data interface{}
-			if err := jsoni.Unmarshal(buf.Bytes(), &data); err != nil {
+			if err := jsoni.Unmarshal(buf.Bytes(), &l); err != nil {
 				benchErr = err
 				b.Fail()
 			}
-			whatval := data.(map[string]interface{})["what"].(string)
-			whereval := data.(map[string]interface{})["where"].([]interface{})[0].(map[string]interface{})["line"].(float64)
-			if err := checkLog(whatval, int(whereval)); err != nil {
+			if err := checkLog(l.What, l.Where[0].Line); err != nil {
 				benchErr = err
 				b.Fail()
 			}
 		}
 	}
+}
 
+func jsoniterFileManyAll(b *testing.B, f *os.File) {
+	defer func() { _ = f.Close() }()
+	b.ResetTimer()
+
+	var data interface{}
+	for n := 0; n < b.N; n++ {
+		_, _ = f.Seek(0, 0)
+		buf := bufio.NewScanner(f)
+		for buf.Scan() {
+			if err := jsoni.Unmarshal(buf.Bytes(), &data); err != nil {
+				benchErr = err
+				b.Fail()
+			}
+		}
+	}
 }

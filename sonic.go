@@ -16,30 +16,72 @@ import (
 	"github.com/bytedance/sonic/ast"
 )
 
+var sonicShouldValidate bool
+
 var sonicPkg = pkg{
 	name: "sonic",
 	calls: map[string]*call{
-		"validate-bytes":            {name: "Valid", fun: sonicValid},
-		"validate-string":           {name: "Valid", fun: sonicValidString},
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: sonicFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: sonicFile1All},
+		"validate-bytes":  {name: "Validate", fun: sonicValidate},
+		"validate-string": {name: "Validate", fun: sonicValidateString},
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = false
+			sonicFile1(b)
+		}},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = false
+			sonicFile1All(b)
+		}},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = false
 			sonicFileMany(b, openSmallLogFile(), smallLogFileLen)
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = false
 			sonicFileManyAll(b, openSmallLogFile(), smallLogFileLen)
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = false
 			sonicFileMany(b, openLargeLogFile(), largeLogFileLen)
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			sonicFileMany(b, openLargeLogFile(), largeLogFileLen)
+			sonicShouldValidate = false
+			sonicFileManyAll(b, openLargeLogFile(), largeLogFileLen)
 		}},
 		"marshal-builder": {name: "Marshal", fun: sonicMarshalBuilder},
 	},
 }
 
-func sonicValid(b *testing.B) {
+var sonicValidatePkg = pkg{
+	name: "sonic-v",
+	calls: map[string]*call{
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = true
+			sonicFile1(b)
+		}},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = true
+			sonicFile1All(b)
+		}},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = true
+			sonicFileMany(b, openSmallLogFile(), smallLogFileLen)
+		}},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = true
+			sonicFileManyAll(b, openSmallLogFile(), smallLogFileLen)
+		}},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = true
+			sonicFileMany(b, openLargeLogFile(), largeLogFileLen)
+		}},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			sonicShouldValidate = true
+			sonicFileManyAll(b, openLargeLogFile(), largeLogFileLen)
+		}},
+	},
+}
+
+func sonicValidate(b *testing.B) {
 	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -50,7 +92,7 @@ func sonicValid(b *testing.B) {
 	}
 }
 
-func sonicValidString(b *testing.B) {
+func sonicValidateString(b *testing.B) {
 	sample, _ := os.ReadFile(filename)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -62,7 +104,7 @@ func sonicValidString(b *testing.B) {
 }
 
 func sonicMarshalBuilder(b *testing.B) {
-	//{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
+	// {"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		dst := ast.NewObject(nil)
@@ -95,29 +137,19 @@ func sonicFile1(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := os.ReadFile(filename)
-		if root, err := sonic.Get(j); err != nil {
+		if sonicShouldValidate && !sonic.Valid(j) {
+			benchErr = errors.New("json not valid")
+			b.Fail()
+		}
+		strnode, _ := sonic.Get(j, "identifier", 0, "type", "coding", 0, "code")
+		strval, _ := strnode.String()
+		arrnode, _ := sonic.Get(j, "name", 2, "given")
+		arrval, _ := arrnode.Array()
+		boolnode, _ := sonic.Get(j, "deceasedBoolean")
+		boolval, _ := boolnode.Bool()
+		if err := checkPatient(strval, len(arrval), boolval); err != nil {
 			benchErr = err
 			b.Fail()
-		} else {
-			strtest, err := root.Get("identifier").Index(0).Get("type").Get("coding").Index(0).Get("code").String()
-			if err != nil {
-				benchErr = err
-				b.Fail()
-			}
-			arrtest, err := root.Get("name").Index(2).Get("given").Array()
-			if err != nil {
-				benchErr = err
-				b.Fail()
-			}
-			booltest, err := root.Get("deceasedBoolean").Bool()
-			if err != nil {
-				benchErr = err
-				b.Fail()
-			}
-			if err = checkPatient(strtest, len(arrtest), booltest); err != nil {
-				benchErr = err
-				b.Fail()
-			}
 		}
 	}
 }
@@ -131,6 +163,10 @@ func sonicFile1All(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := os.ReadFile(filename)
+		if sonicShouldValidate && !sonic.Valid(j) {
+			benchErr = errors.New("json not valid")
+			b.Fail()
+		}
 		if root, err := sonic.Get(j); err != nil {
 			benchErr = err
 			b.Fail()
@@ -173,24 +209,18 @@ func sonicFileMany(b *testing.B, f *os.File, count int) {
 		sonicRecordCount := 0
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			if root, err := sonic.GetFromString(scanner.Text()); err != nil {
+			record := scanner.Bytes()
+			if sonicShouldValidate && !sonic.Valid(record) {
+				benchErr = errors.New("json not valid")
+				b.Fail()
+			}
+			whatnode, _ := sonic.Get(record, "what")
+			whatval, _ := whatnode.String()
+			wherenode, _ := sonic.Get(record, "where", 0, "line")
+			whereval, _ := wherenode.Int64()
+			if err := checkLog(whatval, int(whereval)); err != nil {
 				benchErr = err
 				b.Fail()
-			} else {
-				whatval, err := root.Get("what").String()
-				if err != nil {
-					benchErr = err
-					b.Fail()
-				}
-				whereval, err := root.Get("where").Index(0).Get("line").Int64()
-				if err != nil {
-					benchErr = err
-					b.Fail()
-				}
-				if err = checkLog(whatval, int(whereval)); err != nil {
-					benchErr = err
-					b.Fail()
-				}
 			}
 			sonicRecordCount++
 		}
@@ -210,7 +240,12 @@ func sonicFileManyAll(b *testing.B, f *os.File, count int) {
 		sonicRecordCount := 0
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			if root, err := sonic.GetFromString(scanner.Text()); err != nil {
+			record := scanner.Bytes()
+			if sonicShouldValidate && !sonic.Valid(record) {
+				benchErr = errors.New("json not valid")
+				b.Fail()
+			}
+			if root, err := sonic.Get(record); err != nil {
 				benchErr = err
 				b.Fail()
 			} else {

@@ -15,15 +15,23 @@ import (
 var jsonPkg = pkg{
 	name: "json",
 	calls: map[string]*call{
-		"validate-string":               {name: "Valid", fun: goValidate},
-		"validate-bytes":                {name: "Valid", fun: goValidate},
-		"unmarshal-single-few-keys":     {name: "Unmarshal", fun: goFile1},
-		"unmarshal-single-all-keys":     {name: "Unmarshal", fun: goFile1},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: goFileManySmall},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: goFileManySmall},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: goFileManyLarge},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: goFileManyLarge},
-		"marshal-builder":               {name: "Marshal", fun: goMarshalBuilder},
+		"validate-string":           {name: "Validate", fun: goValidate},
+		"validate-bytes":            {name: "Validate", fun: goValidate},
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: goFile1},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: goFile1All},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileMany(b, openSmallLogFile())
+		}},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileManyAll(b, openSmallLogFile())
+		}},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileMany(b, openLargeLogFile())
+		}},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileManyAll(b, openLargeLogFile())
+		}},
+		"marshal-builder": {name: "Marshal", fun: goMarshalBuilder},
 	},
 }
 
@@ -40,7 +48,7 @@ func goValidate(b *testing.B) {
 
 func goMarshalBuilder(b *testing.B) {
 	var data interface{}
-	err := json.Unmarshal([]byte(`{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}`), &data)
+	err := json.Unmarshal([]byte(getSampleLog()), &data)
 	if err != nil {
 		benchErr = err
 		b.Fail()
@@ -61,30 +69,60 @@ func goFile1(b *testing.B) {
 	}
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
-	var data interface{}
+
+	var p PartialPatient
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		dec := json.NewDecoder(f)
-		if err := dec.Decode(&data); err != nil && err != io.EOF {
+		if err := dec.Decode(&p); err != nil && err != io.EOF {
+			benchErr = err
+			b.Fail()
+		}
+		if err = checkPatient(
+			p.Identifier[0].Type.Coding[0].Code,
+			len(p.Name[0].Given),
+			p.DeceasedBoolean); err != nil {
 			benchErr = err
 			b.Fail()
 		}
 	}
 }
 
-func goFileManySmall(b *testing.B) {
-	f := openSmallLogFile()
+func goFile1All(b *testing.B) {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("Failed to read %s. %s\n", filename, err)
+	}
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
-	var data interface{}
+
+	var p Patient
+	for n := 0; n < b.N; n++ {
+		_, _ = f.Seek(0, 0)
+		dec := json.NewDecoder(f)
+		if err := dec.Decode(&p); err != nil && err != io.EOF {
+			benchErr = err
+			b.Fail()
+		}
+	}
+}
+
+func goFileMany(b *testing.B, f *os.File) {
+	defer func() { _ = f.Close() }()
+	b.ResetTimer()
+
+	var l PartialLog
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
 		dec := json.NewDecoder(bytes.NewReader(j))
 		for {
-			if err := dec.Decode(&data); err == io.EOF {
+			if err := dec.Decode(&l); err == io.EOF {
 				break
 			} else if err != nil {
+				benchErr = err
+				b.Fail()
+			} else if err = checkLog(l.What, l.Where[0].Line); err != nil {
 				benchErr = err
 				b.Fail()
 			}
@@ -92,14 +130,15 @@ func goFileManySmall(b *testing.B) {
 	}
 }
 
-func goFileManyLarge(b *testing.B) {
-	f := openLargeLogFile()
+func goFileManyAll(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
+
 	var data interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		dec := json.NewDecoder(f)
+		j, _ := io.ReadAll(f)
+		dec := json.NewDecoder(bytes.NewReader(j))
 		for {
 			if err := dec.Decode(&data); err == io.EOF {
 				break

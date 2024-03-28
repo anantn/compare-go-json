@@ -60,7 +60,7 @@ func fastjsonValidateString(b *testing.B) {
 }
 
 func fastjsonMarshalBuilder(b *testing.B) {
-	//{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
+	// {"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
 	var a fastjson.Arena
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -180,7 +180,6 @@ func fastjsonVisitChildren(k []byte, v *fastjson.Value) {
 }
 
 func fastjsonFileMany(b *testing.B, f *os.File, count int) {
-	defer func() { _ = f.Close() }()
 	fastjsonCheckFileValues(b, f, count, func(val *fastjson.Value) {
 		whatval := val.GetStringBytes("what")
 		whereval := val.GetInt("where", "0", "line")
@@ -193,7 +192,6 @@ func fastjsonFileMany(b *testing.B, f *os.File, count int) {
 }
 
 func fastjsonFileManyAll(b *testing.B, f *os.File, count int) {
-	defer func() { _ = f.Close() }()
 	fastjsonCheckFileValues(b, f, count, func(val *fastjson.Value) {
 		obj, _ := val.Object()
 		obj.Visit(fastjsonVisitChildren)
