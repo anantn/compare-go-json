@@ -4,7 +4,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -88,12 +87,8 @@ func main() {
 
 	s := getSpecs()
 	if s != nil && strings.Contains(s.os, "mac") {
-		for _, c := range sonicPkg.calls {
-			c.fun = func(b *testing.B) {
-				benchErr = errors.New("unsupported platform")
-				b.Fail()
-			}
-		}
+		sonicPkg.calls = map[string]*call{}
+		sonicValidatePkg.calls = map[string]*call{}
 	}
 
 	pkgs := []*pkg{
