@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -87,6 +88,16 @@ func main() {
 		filename = flag.Args()[0]
 	}
 
+	s := getSpecs()
+	if s != nil && strings.Contains(s.os, "mac") {
+		for _, c := range sonicPkg.calls {
+			c.fun = func(b *testing.B) {
+				benchErr = errors.New("Unsupported platform")
+				b.Fail()
+			}
+		}
+	}
+
 	pkgs := []*pkg{
 		&jsonPkg,
 		&ojPkg,
@@ -119,7 +130,7 @@ func main() {
 	fmt.Println(" parsing performance. The lighter colored bar is the reference, the go json")
 	fmt.Println(" package.")
 	fmt.Println()
-	if s := getSpecs(); s != nil {
+	if s != nil {
 		fmt.Println("Tests run on:")
 		if 0 < len(s.model) {
 			fmt.Printf(" Machine:         %s\n", s.model)
