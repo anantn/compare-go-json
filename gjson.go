@@ -16,15 +16,44 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+var gjsonValidate bool
+
 var gjsonPkg = pkg{
 	name: "gjson",
 	calls: map[string]*call{
 		"parse":          {name: "ParseBytes", fun: gjsonParse},
 		"validate":       {name: "Validate", fun: gjsonValid},
 		"marshal-custom": {name: "Marshal", fun: gjsonMarshalCustom},
-		"file1":          {name: "Decode", fun: gjsonFile1},
-		"small-file":     {name: "Decode", fun: gjsonFileManySmall},
-		"large-file":     {name: "Decode", fun: gjsonFileManyLarge},
+		"file1": {name: "Decode", fun: func(b *testing.B) {
+			gjsonValidate = true
+			gjsonFile1(b)
+		}},
+		"small-file": {name: "Decode", fun: func(b *testing.B) {
+			gjsonValidate = true
+			gjsonFileManySmall(b)
+		}},
+		"large-file": {name: "Decode", fun: func(b *testing.B) {
+			gjsonValidate = true
+			gjsonFileManyLarge(b)
+		}},
+	},
+}
+
+var gjsonNoValidPkg = pkg{
+	name: "gjson-nv",
+	calls: map[string]*call{
+		"file1": {name: "Decode", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFile1(b)
+		}},
+		"small-file": {name: "Decode", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFileManySmall(b)
+		}},
+		"large-file": {name: "Decode", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFileManyLarge(b)
+		}},
 	},
 }
 
@@ -81,7 +110,7 @@ func gjsonFile1(b *testing.B) {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
 		v := string(j)
-		if !gjson.Valid(v) {
+		if gjsonValidate && !gjson.Valid(v) {
 			benchErr = errors.New("JSON not valid")
 			b.Fail()
 		}
@@ -119,7 +148,7 @@ func gjsonCheckFileValues(b *testing.B, f *os.File) {
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			v := scanner.Text()
-			if !gjson.Valid(v) {
+			if gjsonValidate && !gjson.Valid(v) {
 				benchErr = errors.New("JSON not valid")
 				b.Fail()
 			}

@@ -94,6 +94,7 @@ func main() {
 		&jsoniterPkg,
 		&simdjsonPkg,
 		&gjsonPkg,
+		&gjsonNoValidPkg,
 		&sonicPkg,
 	}
 	for _, s := range []*suite{
@@ -105,8 +106,8 @@ func main() {
 		{fun: "marshal-struct", title: "Marshal a struct to string/[]byte", ref: "json"},
 		{fun: "marshal-custom", title: "Marshal custom data with a builder", ref: "json"},
 		{fun: "file1", title: "Read from single JSON file", ref: "json"},
-		{fun: "small-file", title: "Read multiple JSON in a small log file (100MB)", ref: "json"},
-		{fun: "large-file", title: "Read multiple JSON in a semi large log file (5GB)", ref: "json"},
+		{fun: "small-file", title: "Read multiple JSON in a small log file, read few keys (100MB)", ref: "json"},
+		{fun: "large-file", title: "Read multiple JSON in a semi large log file, read few keys (5GB)", ref: "json"},
 	} {
 		s.exec(pkgs)
 	}
