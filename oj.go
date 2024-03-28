@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"io"
 	"log"
 	"os"
@@ -123,16 +124,19 @@ func ojCheckFileValues(b *testing.B, f *os.File) {
 	p := &oj.Parser{Reuse: true}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		if _, err := p.ParseReader(f, func(result any) {
-			whatval := whatpath.Get(result)[0].(string)
-			whereval := wherepath.Get(result)[0].(int64)
-			if err := checkLog(whatval, int(whereval)); err != nil {
+		buf := bufio.NewScanner(f)
+		for buf.Scan() {
+			if _, err := p.Parse(buf.Bytes(), func(result any) {
+				whatval := whatpath.Get(result)[0].(string)
+				whereval := wherepath.Get(result)[0].(int64)
+				if err := checkLog(whatval, int(whereval)); err != nil {
+					benchErr = err
+					b.Fail()
+				}
+			}); err != nil {
 				benchErr = err
 				b.Fail()
 			}
-		}); err != nil {
-			benchErr = err
-			b.Fail()
 		}
 	}
 }

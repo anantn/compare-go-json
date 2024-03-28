@@ -3,7 +3,9 @@
 package main
 
 import (
+	"bufio"
 	"errors"
+	"io"
 	"log"
 	"os"
 	"testing"
@@ -11,6 +13,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
+var jsoni = jsoniter.ConfigFastest
 var jsoniterPkg = pkg{
 	name: "jsoniter",
 	calls: map[string]*call{
@@ -42,7 +45,7 @@ func jsoniterUnmarshalPatient(b *testing.B) {
 
 	var patient Patient
 	for n := 0; n < b.N; n++ {
-		if benchErr = jsoniter.Unmarshal(sample, &patient); benchErr != nil {
+		if benchErr = jsoni.Unmarshal(sample, &patient); benchErr != nil {
 			b.Fail()
 		}
 	}
@@ -50,7 +53,7 @@ func jsoniterUnmarshalPatient(b *testing.B) {
 
 func jsoniterMarshalBuilder(b *testing.B) {
 	var data interface{}
-	err := jsoniter.UnmarshalFromString(`{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}`, &data)
+	err := jsoni.UnmarshalFromString(`{"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}`, &data)
 	if err != nil {
 		benchErr = err
 		b.Fail()
@@ -58,7 +61,7 @@ func jsoniterMarshalBuilder(b *testing.B) {
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		if _, benchErr = jsoniter.Marshal(data); benchErr != nil {
+		if _, benchErr = jsoni.Marshal(data); benchErr != nil {
 			b.Fail()
 		}
 	}
@@ -74,9 +77,9 @@ func jsoniterFile1(b *testing.B) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		dec := jsoniter.NewDecoder(f)
+		j, _ := io.ReadAll(f)
 		var data interface{}
-		if err := dec.Decode(&data); err != nil {
+		if err := jsoni.Unmarshal(j, &data); err != nil {
 			benchErr = err
 			b.Fail()
 		}
@@ -105,13 +108,10 @@ func jsoniterCheckFileValues(b *testing.B, f *os.File) {
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		dec := jsoniter.NewDecoder(f)
-		for {
+		buf := bufio.NewScanner(f)
+		for buf.Scan() {
 			var data interface{}
-			if !dec.More() {
-				break
-			}
-			if err := dec.Decode(&data); err != nil {
+			if err := jsoni.Unmarshal(buf.Bytes(), &data); err != nil {
 				benchErr = err
 				b.Fail()
 			}

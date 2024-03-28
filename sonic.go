@@ -24,16 +24,16 @@ var sonicPkg = pkg{
 		"unmarshal-single-few-keys": {name: "Unmarshal", fun: sonicFile1},
 		"unmarshal-single-all-keys": {name: "Unmarshal", fun: sonicFile1All},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			sonicFileMany(b, openSmallLogFile(), 39449)
+			sonicFileMany(b, openSmallLogFile(), smallLogFileLen)
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			sonicFileManyAll(b, openSmallLogFile(), 39449)
+			sonicFileManyAll(b, openSmallLogFile(), smallLogFileLen)
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			sonicFileMany(b, openLargeLogFile(), 585032)
+			sonicFileMany(b, openLargeLogFile(), largeLogFileLen)
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			sonicFileMany(b, openLargeLogFile(), 585032)
+			sonicFileMany(b, openLargeLogFile(), largeLogFileLen)
 		}},
 		"marshal-builder": {name: "Marshal", fun: sonicMarshalBuilder},
 	},
@@ -136,8 +136,9 @@ func sonicFile1All(b *testing.B) {
 			b.Fail()
 		} else {
 			root.ForEach(sonicVisitChildren)
-			if sonicVisitCount != 116 {
-				benchErr = fmt.Errorf("expected 116 children, got %d", sonicVisitCount)
+			if sonicVisitCount != singleNumChildren {
+				benchErr = fmt.Errorf("expected %d children, got %d",
+					singleNumChildren, sonicVisitCount)
 				b.Fail()
 			}
 			if sonicValueHolder == nil {
@@ -216,8 +217,9 @@ func sonicFileManyAll(b *testing.B, f *os.File, count int) {
 				sonicVisitCount = 0
 				sonicValueHolder = nil
 				root.ForEach(sonicVisitChildren)
-				if sonicVisitCount != 125 {
-					benchErr = fmt.Errorf("expected 125 children, got %d", sonicVisitCount)
+				if sonicVisitCount != logNumChildren {
+					benchErr = fmt.Errorf("expected %d children, got %d",
+						logNumChildren, sonicVisitCount)
 					b.Fail()
 				}
 				if sonicValueHolder == nil {

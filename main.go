@@ -4,8 +4,10 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -27,14 +29,18 @@ const (
 )
 
 var (
-	filename = "data/patient.json"
-	benchErr error
+	filename          = "data/patient.json"
+	singleNumChildren = 116
+	benchErr          error
 
-	smallLogFile = "data/log-small.json"
-	smallSize    = 100
+	logNumChildren  = 125
+	smallLogFile    = "data/log-small.json"
+	smallSize       = 100
+	smallLogFileLen = 0
 
-	largeLogFile = "data/log-large.json"
-	largeSize    = 5000
+	largeLogFile    = "data/log-large.json"
+	largeSize       = 5000
+	largeLogFileLen = 0
 )
 
 type specs struct {
@@ -80,6 +86,16 @@ func main() {
 		filename = flag.Args()[0]
 	}
 
+	s := getSpecs()
+	if s != nil && strings.Contains(s.os, "mac") {
+		for _, c := range sonicPkg.calls {
+			c.fun = func(b *testing.B) {
+				benchErr = errors.New("unsupported platform")
+				b.Fail()
+			}
+		}
+	}
+
 	pkgs := []*pkg{
 		&jsonPkg,
 		&ojPkg,
@@ -87,6 +103,7 @@ func main() {
 		&jsoniterPkg,
 		&simdjsonPkg,
 		&gjsonPkg,
+		&gjsonNoValidPkg,
 		&sonicPkg,
 	}
 	for _, s := range []*suite{
@@ -110,7 +127,7 @@ func main() {
 	fmt.Println(" parsing performance. The lighter colored bar is the reference, the go json")
 	fmt.Println(" package.")
 	fmt.Println()
-	if s := getSpecs(); s != nil {
+	if s != nil {
 		fmt.Println("Tests run on:")
 		if 0 < len(s.model) {
 			fmt.Printf(" Machine:         %s\n", s.model)
@@ -180,6 +197,21 @@ func (s *suite) exec(pkgs []*pkg) {
 	}
 }
 
+func lineCounter(r io.Reader) (int, error) {
+	buf := make([]byte, 32*1024)
+	count := 0
+	for {
+		c, err := r.Read(buf)
+		count += bytes.Count(buf[:c], []byte{'\n'})
+		switch {
+		case err == io.EOF:
+			return count, nil
+		case err != nil:
+			return count, err
+		}
+	}
+}
+
 func openSmallLogFile() *os.File {
 	f, err := os.Open(smallLogFile)
 	if err != nil {
@@ -188,6 +220,11 @@ func openSmallLogFile() *os.File {
 		}
 		if f, err = os.Open(smallLogFile); err != nil {
 			log.Fatalf("Failed to open %s. %s\n", smallLogFile, err)
+		}
+	}
+	if smallLogFileLen == 0 {
+		if smallLogFileLen, err = lineCounter(f); err != nil {
+			log.Fatalf("Failed to count lines in %s. %s\n", smallLogFile, err)
 		}
 	}
 	return f
@@ -201,6 +238,11 @@ func openLargeLogFile() *os.File {
 		}
 		if f, err = os.Open(largeLogFile); err != nil {
 			log.Fatalf("Failed to open %s. %s\n", largeLogFile, err)
+		}
+	}
+	if largeLogFileLen == 0 {
+		if largeLogFileLen, err = lineCounter(f); err != nil {
+			log.Fatalf("Failed to count lines in %s. %s\n", largeLogFile, err)
 		}
 	}
 	return f

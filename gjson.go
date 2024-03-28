@@ -16,26 +16,68 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+var gjsonValidate bool
+
 var gjsonPkg = pkg{
 	name: "gjson",
 	calls: map[string]*call{
-		"validate-bytes":            {name: "Valid", fun: gjsonValid},
-		"validate-string":           {name: "Valid", fun: gjsonValidString},
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: gjsonFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: gjsonFile1All},
+		"validate-bytes":  {name: "Valid", fun: gjsonValid},
+		"validate-string": {name: "Valid", fun: gjsonValidString},
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = true
+			gjsonFile1(b)
+		}},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = true
+			gjsonFile1All(b)
+		}},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = true
 			gjsonFileMany(b, openSmallLogFile(), 39449)
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = true
 			gjsonFileManyAll(b, openSmallLogFile(), 39449)
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			gjsonFileMany(b, openLargeLogFile(), 585032)
+			gjsonValidate = true
+			gjsonFileMany(b, openLargeLogFile(), 1972490)
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			gjsonFileMany(b, openLargeLogFile(), 585032)
+			gjsonValidate = true
+			gjsonFileMany(b, openLargeLogFile(), 1972490)
 		}},
 		"marshal-builder": {name: "Marshal", fun: gjsonMarshalBuilder},
+	},
+}
+
+var gjsonNoValidPkg = pkg{
+	name: "gjson-nv",
+	calls: map[string]*call{
+		"unmarshal-single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFile1(b)
+		}},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFile1All(b)
+		}},
+		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFileMany(b, openSmallLogFile(), smallLogFileLen)
+		}},
+		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFileManyAll(b, openSmallLogFile(), smallLogFileLen)
+		}},
+		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFileMany(b, openLargeLogFile(), largeLogFileLen)
+		}},
+		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonValidate = false
+			gjsonFileMany(b, openLargeLogFile(), largeLogFileLen)
+		}},
 	},
 }
 
@@ -91,6 +133,10 @@ func gjsonFile1(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
+		if gjsonValidate && !gjson.ValidBytes(j) {
+			benchErr = errors.New("JSON not valid")
+			b.Fail()
+		}
 		result := gjson.ParseBytes(j)
 		if !result.IsObject() {
 			benchErr = errors.New("expected object")
@@ -119,33 +165,47 @@ func gjsonFile1All(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
+		if gjsonValidate && !gjson.ValidBytes(j) {
+			benchErr = errors.New("JSON not valid")
+			b.Fail()
+		}
 		result := gjson.ParseBytes(j)
 		if !result.IsObject() {
 			benchErr = errors.New("expected object")
 			b.Fail()
 		} else {
 			result.ForEach(gjsonVisitChildren)
-			if gjsonVisitCount != 116 {
-				benchErr = fmt.Errorf("expected 116 children, got %d", gjsonVisitCount)
+			if gjsonVisitCount != singleNumChildren {
+				benchErr = fmt.Errorf("expected %d children, got %d",
+					singleNumChildren, gjsonVisitCount)
 				b.Fail()
 			}
-			if !gjsonValueHolder.Exists() {
+			if gjsonValueHolder == nil {
 				benchErr = fmt.Errorf("expected a value, got nil")
 				b.Fail()
 			}
 			gjsonVisitCount = 0
-			gjsonValueHolder = gjson.Result{}
+			gjsonValueHolder = nil
 		}
 	}
 }
 
 // Store values to avoid compiler optimizations
 var gjsonVisitCount int
-var gjsonValueHolder gjson.Result
+var gjsonValueHolder interface{}
 var gjsonRecordCount int
 
 func gjsonVisitChildren(k, v gjson.Result) bool {
-	gjsonValueHolder = v
+	switch v.Type {
+	case gjson.String:
+		gjsonValueHolder = v.Str
+	case gjson.Number:
+		gjsonValueHolder = v.Num
+	case gjson.True:
+		gjsonValueHolder = true
+	case gjson.False:
+		gjsonValueHolder = false
+	}
 	gjsonVisitCount++
 	if v.IsObject() || v.IsArray() {
 		v.ForEach(gjsonVisitChildren)
@@ -154,7 +214,6 @@ func gjsonVisitChildren(k, v gjson.Result) bool {
 }
 
 func gjsonFileMany(b *testing.B, f *os.File, count int) {
-	defer func() { _ = f.Close() }()
 	gjsonCheckFileValues(b, f, count, func(result gjson.Result) {
 		whatval := result.Get("what").String()
 		whereval := result.Get("where.0.line").Int()
@@ -167,19 +226,19 @@ func gjsonFileMany(b *testing.B, f *os.File, count int) {
 }
 
 func gjsonFileManyAll(b *testing.B, f *os.File, count int) {
-	defer func() { _ = f.Close() }()
 	gjsonCheckFileValues(b, f, count, func(result gjson.Result) {
 		result.ForEach(gjsonVisitChildren)
-		if gjsonVisitCount != 125 {
-			benchErr = fmt.Errorf("expected 125 children, got %d", gjsonVisitCount)
+		if gjsonVisitCount != logNumChildren {
+			benchErr = fmt.Errorf("expected %d children, got %d",
+				logNumChildren, gjsonVisitCount)
 			b.Fail()
 		}
-		if !gjsonValueHolder.Exists() {
+		if gjsonValueHolder == nil {
 			benchErr = fmt.Errorf("expected a value, got nil")
 			b.Fail()
 		}
 		gjsonVisitCount = 0
-		gjsonValueHolder = gjson.Result{}
+		gjsonValueHolder = nil
 	})
 }
 
@@ -193,6 +252,10 @@ func gjsonCheckFileValues(b *testing.B, f *os.File, count int, cb func(gjson.Res
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			j := scanner.Bytes()
+			if gjsonValidate && !gjson.ValidBytes(j) {
+				benchErr = errors.New("JSON not valid")
+				b.Fail()
+			}
 			if result := gjson.ParseBytes(j); !result.IsObject() {
 				benchErr = errors.New("expected object")
 				b.Fail()

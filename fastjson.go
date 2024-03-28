@@ -22,16 +22,16 @@ var fastjsonPkg = pkg{
 		"unmarshal-single-few-keys": {name: "Unmarshal", fun: fastjsonFile1},
 		"unmarshal-single-all-keys": {name: "Unmarshal", fun: fastjsonFile1All},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileMany(b, openSmallLogFile(), 39449)
+			fastjsonFileMany(b, openSmallLogFile(), smallLogFileLen)
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileManyAll(b, openSmallLogFile(), 39449)
+			fastjsonFileManyAll(b, openSmallLogFile(), smallLogFileLen)
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileMany(b, openLargeLogFile(), 585032)
+			fastjsonFileMany(b, openLargeLogFile(), largeLogFileLen)
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileManyAll(b, openLargeLogFile(), 585032)
+			fastjsonFileManyAll(b, openLargeLogFile(), largeLogFileLen)
 		}},
 		"marshal-builder": {name: "Marshal", fun: fastjsonMarshalBuilder},
 	},
@@ -137,8 +137,9 @@ func fastjsonFile1All(b *testing.B) {
 			}
 			root, _ := val.Object()
 			root.Visit(fastjsonVisitChildren)
-			if fastjsonVisitCount != 116 {
-				benchErr = fmt.Errorf("expected 116 children, got %d", fastjsonVisitCount)
+			if fastjsonVisitCount != singleNumChildren {
+				benchErr = fmt.Errorf("expected %d children, got %d",
+					singleNumChildren, fastjsonVisitCount)
 				b.Fail()
 			}
 			if fastjsonValueHolder == nil {
@@ -153,13 +154,20 @@ func fastjsonFile1All(b *testing.B) {
 
 // Store values to avoid compiler optimizations
 var fastjsonVisitCount int
-var fastjsonValueHolder *fastjson.Value
+var fastjsonValueHolder interface{}
 var fastjsonManyRecordCount int
 
 func fastjsonVisitChildren(k []byte, v *fastjson.Value) {
-	fastjsonValueHolder = v
 	fastjsonVisitCount++
 	switch v.Type() {
+	case fastjson.TypeFalse:
+		fastjsonValueHolder = false
+	case fastjson.TypeTrue:
+		fastjsonValueHolder = true
+	case fastjson.TypeNumber:
+		fastjsonValueHolder = v.GetFloat64()
+	case fastjson.TypeString:
+		fastjsonValueHolder = v.GetStringBytes()
 	case fastjson.TypeObject:
 		children, _ := v.Object()
 		children.Visit(fastjsonVisitChildren)
@@ -189,8 +197,9 @@ func fastjsonFileManyAll(b *testing.B, f *os.File, count int) {
 	fastjsonCheckFileValues(b, f, count, func(val *fastjson.Value) {
 		obj, _ := val.Object()
 		obj.Visit(fastjsonVisitChildren)
-		if fastjsonVisitCount != 125 {
-			benchErr = fmt.Errorf("expected 125 children, got %d", fastjsonVisitCount)
+		if fastjsonVisitCount != logNumChildren {
+			benchErr = fmt.Errorf("expected %d children, got %d",
+				logNumChildren, fastjsonVisitCount)
 			b.Fail()
 		}
 		if fastjsonValueHolder == nil {
