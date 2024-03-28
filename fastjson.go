@@ -155,7 +155,6 @@ func fastjsonFile1All(b *testing.B) {
 // Store values to avoid compiler optimizations
 var fastjsonVisitCount int
 var fastjsonValueHolder interface{}
-var fastjsonManyRecordCount int
 
 func fastjsonVisitChildren(k []byte, v *fastjson.Value) {
 	fastjsonVisitCount++
@@ -217,6 +216,7 @@ func fastjsonCheckFileValues(b *testing.B, f *os.File, count int, cb func(*fastj
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
+		fastjsonManyRecordCount := 0
 		for buf.Scan() {
 			if val, err := p.ParseBytes(buf.Bytes()); err != nil {
 				benchErr = err

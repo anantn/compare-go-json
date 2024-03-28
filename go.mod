@@ -5,6 +5,7 @@ go 1.21
 toolchain go1.22.1
 
 require (
+	github.com/buger/jsonparser v1.1.1
 	github.com/bytedance/sonic v1.11.3
 	github.com/goccy/go-json v0.10.2
 	github.com/json-iterator/go v1.1.12
