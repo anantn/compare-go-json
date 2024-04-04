@@ -108,14 +108,15 @@ func gjsonValidateString(b *testing.B) {
 func gjsonMarshalBuilder(b *testing.B) {
 	// {"when":1711509483695365000,"what":"Just some fake log entry for a generated log file.","where":[{"file":"example.go","line":123}],"who":"benchmark-application","level":"INFO"}
 	b.ResetTimer()
+	var output = make([]byte, 0, 256)
 	for n := 0; n < b.N; n++ {
-		v, _ := sjson.Set("{}", "when", time.Now().UnixNano())
-		v, _ = sjson.Set(v, "what", "Just some fake log entry for a generated log file.")
-		v, _ = sjson.Set(v, "where.0.file", "example.go")
-		v, _ = sjson.Set(v, "where.0.line", 123)
-		v, _ = sjson.Set(v, "who", "benchmark-application")
-		v, _ = sjson.Set(v, "level", "INFO")
-		if err := checkMarshalCustom(v); err != nil {
+		v, _ := sjson.SetBytes(output, "when", time.Now().UnixNano())
+		v, _ = sjson.SetBytes(v, "what", "Just some fake log entry for a generated log file.")
+		v, _ = sjson.SetBytes(v, "where.0.file", "example.go")
+		v, _ = sjson.SetBytes(v, "where.0.line", 123)
+		v, _ = sjson.SetBytes(v, "who", "benchmark-application")
+		v, _ = sjson.SetBytes(v, "level", "INFO")
+		if err := checkMarshalCustom(string(v)); err != nil {
 			benchErr = err
 			b.Fail()
 		}
