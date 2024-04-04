@@ -7,6 +7,7 @@ toolchain go1.22.1
 require (
 	github.com/buger/jsonparser v1.1.1
 	github.com/bytedance/sonic v1.11.3
+	github.com/go-json-experiment/json v0.0.0-20231102232822-2e55bd4e08b0
 	github.com/goccy/go-json v0.10.2
 	github.com/json-iterator/go v1.1.12
 	github.com/minio/simdjson-go v0.4.5

@@ -32,12 +32,12 @@ var (
 	singleNumChildren = 116
 	benchErr          error
 
-	smallNumChildren = 125
+	smallNumChildren = 126
 	smallLogFile     = "data/log-small.json"
 	smallSize        = 100
 	smallNumRecords  = 0
 
-	largeNumChildren = 1178
+	largeNumChildren = 1179
 	largeLogFile     = "data/log-large.json"
 	largeSize        = 5000
 	largeNumRecords  = 0
@@ -108,6 +108,7 @@ func main() {
 
 	pkgs := []*pkg{
 		&jsonPkg,
+		&json2Pkg,
 		&ojPkg,
 		&fastjsonPkg,
 		&jsoniterPkg,
@@ -124,12 +125,12 @@ func main() {
 	for _, s := range []*suite{
 		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},
 		{fun: "validate-string", title: "Validate string", ref: "json"},
-		{fun: "unmarshal-single-few-keys", title: "Unmarshal single JSON record, read few keys", ref: "json"},
-		{fun: "unmarshal-single-all-keys", title: "Unmarshal single JSON record, read all keys", ref: "json"},
-		{fun: "unmarshal-small-file-few-keys", title: "Unmarshal many JSON records from small file (100MB), read few keys", ref: "json"},
-		{fun: "unmarshal-small-file-all-keys", title: "Unmarshal many JSON records from small file (100MB), read all keys", ref: "json"},
-		{fun: "unmarshal-large-file-few-keys", title: "Unmarshal many JSON records from semi-large file (5GB), read few keys", ref: "json"},
-		{fun: "unmarshal-large-file-all-keys", title: "Unmarshal many JSON records from semi-large file (5GB), read all keys", ref: "json"},
+		{fun: "unmarshal-single-few-keys", title: "Unmarshal single JSON record (2kb), read few keys", ref: "json"},
+		{fun: "unmarshal-single-all-keys", title: "Unmarshal single JSON record (2kb), read all keys", ref: "json"},
+		{fun: "unmarshal-small-file-few-keys", title: "Unmarshal many JSON records (2kb) from small file (100MB), read few keys", ref: "json"},
+		{fun: "unmarshal-small-file-all-keys", title: "Unmarshal many JSON records (2kb) from small file (100MB), read all keys", ref: "json"},
+		{fun: "unmarshal-large-file-few-keys", title: "Unmarshal many JSON records (25kb) from semi-large file (5GB), read few keys", ref: "json"},
+		{fun: "unmarshal-large-file-all-keys", title: "Unmarshal many JSON records from (25kb) semi-large file (5GB), read all keys", ref: "json"},
 		{fun: "marshal-builder", title: "Marshal custom data through an object builder", ref: "json"},
 	} {
 		s.exec(pkgs)
@@ -288,13 +289,15 @@ func createLogFile(filename string, largeRecord bool, size int) error {
 	b.Pop()
 	_ = b.Value("benchmark-application", "who")
 	_ = b.Value("INFO", "level")
+
 	// Add bunch of patient data to make the record large
+	_ = b.Array("patients")
 	if largeRecord {
 		for i := 0; i < 10; i++ {
-			_ = b.Value(patientData, fmt.Sprintf("patient%d", i))
+			_ = b.Value(patientData)
 		}
 	} else {
-		_ = b.Value(patientData, "patient")
+		_ = b.Value(patientData)
 	}
 	b.PopAll()
 	entry := b.Result()

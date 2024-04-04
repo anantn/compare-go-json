@@ -3,7 +3,7 @@
 package main
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/json"
 	"errors"
 	"io"
@@ -18,18 +18,20 @@ var jsonPkg = pkg{
 		"validate-string":           {name: "Validate", fun: goValidate},
 		"validate-bytes":            {name: "Validate", fun: goValidate},
 		"unmarshal-single-few-keys": {name: "Unmarshal", fun: goFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: goFile1All},
+		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFile1All(b, false)
+		}},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			goFileMany(b, openSmallLogFile())
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			goFileManyAll(b, openSmallLogFile())
+			goFileManyAll(b, openSmallLogFile(), false)
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			goFileMany(b, openLargeLogFile())
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			goFileManyAll(b, openLargeLogFile())
+			goFileManyAll(b, openLargeLogFile(), false)
 		}},
 		"marshal-builder": {name: "Marshal", fun: goMarshalBuilder},
 	},
@@ -70,25 +72,23 @@ func goFile1(b *testing.B) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
+	// Allow partial reading into struct just to get baseline
 	var p PartialPatient
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		dec := json.NewDecoder(f)
-		if err := dec.Decode(&p); err != nil && err != io.EOF {
+		j, _ := io.ReadAll(f)
+		if err := json.Unmarshal(j, &p); err != nil {
 			benchErr = err
 			b.Fail()
 		}
-		if err = checkPatient(
-			p.Identifier[0].Type.Coding[0].Code,
-			len(p.Name[0].Given),
-			p.DeceasedBoolean); err != nil {
+		if err = checkPatientStruct(p); err != nil {
 			benchErr = err
 			b.Fail()
 		}
 	}
 }
 
-func goFile1All(b *testing.B) {
+func goFile1All(b *testing.B, useStruct bool) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -97,12 +97,20 @@ func goFile1All(b *testing.B) {
 	b.ResetTimer()
 
 	var p Patient
+	var pi interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		dec := json.NewDecoder(f)
-		if err := dec.Decode(&p); err != nil && err != io.EOF {
-			benchErr = err
-			b.Fail()
+		j, _ := io.ReadAll(f)
+		if useStruct {
+			if err := json.Unmarshal(j, &p); err != nil {
+				benchErr = err
+				b.Fail()
+			}
+		} else {
+			if err := json.Unmarshal(j, &pi); err != nil {
+				benchErr = err
+				b.Fail()
+			}
 		}
 	}
 }
@@ -111,15 +119,13 @@ func goFileMany(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
+	// Allow partial reading into struct just to get baseline
 	var l PartialLog
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		j, _ := io.ReadAll(f)
-		dec := json.NewDecoder(bytes.NewReader(j))
-		for {
-			if err := dec.Decode(&l); err == io.EOF {
-				break
-			} else if err != nil {
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			if err := json.Unmarshal(scanner.Bytes(), &l); err != nil {
 				benchErr = err
 				b.Fail()
 			} else if err = checkLog(l.What, l.Where[0].Line); err != nil {
@@ -130,21 +136,26 @@ func goFileMany(b *testing.B, f *os.File) {
 	}
 }
 
-func goFileManyAll(b *testing.B, f *os.File) {
+func goFileManyAll(b *testing.B, f *os.File, useStruct bool) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
-	var data interface{}
+	var l FullLog
+	var li interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		j, _ := io.ReadAll(f)
-		dec := json.NewDecoder(bytes.NewReader(j))
-		for {
-			if err := dec.Decode(&data); err == io.EOF {
-				break
-			} else if err != nil {
-				benchErr = err
-				b.Fail()
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			if useStruct {
+				if err := json.Unmarshal(scanner.Bytes(), &l); err != nil {
+					benchErr = err
+					b.Fail()
+				}
+			} else {
+				if err := json.Unmarshal(scanner.Bytes(), &li); err != nil {
+					benchErr = err
+					b.Fail()
+				}
 			}
 		}
 	}
