@@ -33,19 +33,19 @@ var gjsonPkg = pkg{
 		}},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFileMany(b, openSmallLogFile(), smallLogFileLen)
+			gjsonFileMany(b, smallTestFile())
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFileManyAll(b, openSmallLogFile(), smallLogFileLen)
+			gjsonFileManyAll(b, smallTestFile())
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFileMany(b, openLargeLogFile(), largeLogFileLen)
+			gjsonFileMany(b, largeTestFile())
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFileManyAll(b, openLargeLogFile(), largeLogFileLen)
+			gjsonFileManyAll(b, largeTestFile())
 		}},
 		"marshal-builder": {name: "Marshal", fun: gjsonMarshalBuilder},
 	},
@@ -64,19 +64,19 @@ var gjsonValidatePkg = pkg{
 		}},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFileMany(b, openSmallLogFile(), smallLogFileLen)
+			gjsonFileMany(b, smallTestFile())
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFileManyAll(b, openSmallLogFile(), smallLogFileLen)
+			gjsonFileManyAll(b, smallTestFile())
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFileMany(b, openLargeLogFile(), largeLogFileLen)
+			gjsonFileMany(b, largeTestFile())
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFileManyAll(b, openLargeLogFile(), largeLogFileLen)
+			gjsonFileManyAll(b, largeTestFile())
 		}},
 	},
 }
@@ -212,8 +212,8 @@ func gjsonVisitChildren(k, v gjson.Result) bool {
 	return true
 }
 
-func gjsonFileMany(b *testing.B, f *os.File, count int) {
-	gjsonCheckFileValues(b, f, count, func(result gjson.Result) {
+func gjsonFileMany(b *testing.B, f testfile) {
+	gjsonCheckFileValues(b, f.handle, f.numRecords, func(result gjson.Result) {
 		whatval := result.Get("what").String()
 		whereval := result.Get("where.0.line").Int()
 		err := checkLog(whatval, int(whereval))
@@ -224,12 +224,12 @@ func gjsonFileMany(b *testing.B, f *os.File, count int) {
 	})
 }
 
-func gjsonFileManyAll(b *testing.B, f *os.File, count int) {
-	gjsonCheckFileValues(b, f, count, func(result gjson.Result) {
+func gjsonFileManyAll(b *testing.B, f testfile) {
+	gjsonCheckFileValues(b, f.handle, f.numRecords, func(result gjson.Result) {
 		result.ForEach(gjsonVisitChildren)
-		if gjsonVisitCount != logNumChildren {
+		if gjsonVisitCount != f.numChildren {
 			benchErr = fmt.Errorf("expected %d children, got %d",
-				logNumChildren, gjsonVisitCount)
+				f.numChildren, gjsonVisitCount)
 			b.Fail()
 		}
 		if gjsonValueHolder == nil {

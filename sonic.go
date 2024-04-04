@@ -33,19 +33,19 @@ var sonicPkg = pkg{
 		}},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			sonicShouldValidate = false
-			sonicFileMany(b, openSmallLogFile(), smallLogFileLen)
+			sonicFileMany(b, smallTestFile())
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			sonicShouldValidate = false
-			sonicFileManyAll(b, openSmallLogFile(), smallLogFileLen)
+			sonicFileManyAll(b, smallTestFile())
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			sonicShouldValidate = false
-			sonicFileMany(b, openLargeLogFile(), largeLogFileLen)
+			sonicFileMany(b, largeTestFile())
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			sonicShouldValidate = false
-			sonicFileManyAll(b, openLargeLogFile(), largeLogFileLen)
+			sonicFileManyAll(b, largeTestFile())
 		}},
 		"marshal-builder": {name: "Marshal", fun: sonicMarshalBuilder},
 	},
@@ -64,19 +64,19 @@ var sonicValidatePkg = pkg{
 		}},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			sonicShouldValidate = true
-			sonicFileMany(b, openSmallLogFile(), smallLogFileLen)
+			sonicFileMany(b, smallTestFile())
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			sonicShouldValidate = true
-			sonicFileManyAll(b, openSmallLogFile(), smallLogFileLen)
+			sonicFileManyAll(b, smallTestFile())
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			sonicShouldValidate = true
-			sonicFileMany(b, openLargeLogFile(), largeLogFileLen)
+			sonicFileMany(b, largeTestFile())
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			sonicShouldValidate = true
-			sonicFileManyAll(b, openLargeLogFile(), largeLogFileLen)
+			sonicFileManyAll(b, largeTestFile())
 		}},
 	},
 }
@@ -200,14 +200,14 @@ func sonicVisitChildren(path ast.Sequence, node *ast.Node) bool {
 	return true
 }
 
-func sonicFileMany(b *testing.B, f *os.File, count int) {
-	defer func() { _ = f.Close() }()
+func sonicFileMany(b *testing.B, f testfile) {
+	defer func() { _ = f.handle.Close() }()
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		_, _ = f.Seek(0, 0)
+		_, _ = f.handle.Seek(0, 0)
 		sonicRecordCount := 0
-		scanner := bufio.NewScanner(f)
+		scanner := bufio.NewScanner(f.handle)
 		for scanner.Scan() {
 			record := scanner.Bytes()
 			if sonicShouldValidate && !sonic.Valid(record) {
@@ -224,21 +224,21 @@ func sonicFileMany(b *testing.B, f *os.File, count int) {
 			}
 			sonicRecordCount++
 		}
-		if sonicRecordCount != count {
-			benchErr = fmt.Errorf("expected %d records, got %d", count, sonicRecordCount)
+		if sonicRecordCount != f.numRecords {
+			benchErr = fmt.Errorf("expected %d records, got %d", f.numRecords, sonicRecordCount)
 			b.Fail()
 		}
 	}
 }
 
-func sonicFileManyAll(b *testing.B, f *os.File, count int) {
-	defer func() { _ = f.Close() }()
+func sonicFileManyAll(b *testing.B, f testfile) {
+	defer func() { _ = f.handle.Close() }()
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		_, _ = f.Seek(0, 0)
+		_, _ = f.handle.Seek(0, 0)
 		sonicRecordCount := 0
-		scanner := bufio.NewScanner(f)
+		scanner := bufio.NewScanner(f.handle)
 		for scanner.Scan() {
 			record := scanner.Bytes()
 			if sonicShouldValidate && !sonic.Valid(record) {
@@ -252,9 +252,9 @@ func sonicFileManyAll(b *testing.B, f *os.File, count int) {
 				sonicVisitCount = 0
 				sonicValueHolder = nil
 				root.ForEach(sonicVisitChildren)
-				if sonicVisitCount != logNumChildren {
+				if sonicVisitCount != f.numChildren {
 					benchErr = fmt.Errorf("expected %d children, got %d",
-						logNumChildren, sonicVisitCount)
+						f.numChildren, sonicVisitCount)
 					b.Fail()
 				}
 				if sonicValueHolder == nil {
@@ -264,8 +264,8 @@ func sonicFileManyAll(b *testing.B, f *os.File, count int) {
 			}
 			sonicRecordCount++
 		}
-		if sonicRecordCount != count {
-			benchErr = fmt.Errorf("expected %d records, got %d", count, sonicRecordCount)
+		if sonicRecordCount != f.numRecords {
+			benchErr = fmt.Errorf("expected %d records, got %d", f.numRecords, sonicRecordCount)
 			b.Fail()
 		}
 	}

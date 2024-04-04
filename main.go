@@ -32,15 +32,30 @@ var (
 	singleNumChildren = 116
 	benchErr          error
 
-	logNumChildren  = 125
-	smallLogFile    = "data/log-small.json"
-	smallSize       = 100
-	smallLogFileLen = 0
+	smallNumChildren = 125
+	smallLogFile     = "data/log-small.json"
+	smallSize        = 100
+	smallNumRecords  = 0
 
-	largeLogFile    = "data/log-large.json"
-	largeSize       = 5000
-	largeLogFileLen = 0
+	largeNumChildren = 1178
+	largeLogFile     = "data/log-large.json"
+	largeSize        = 5000
+	largeNumRecords  = 0
 )
+
+type testfile struct {
+	handle      *os.File
+	numChildren int
+	numRecords  int
+}
+
+func smallTestFile() testfile {
+	return testfile{openSmallLogFile(), smallNumChildren, smallNumRecords}
+}
+
+func largeTestFile() testfile {
+	return testfile{openLargeLogFile(), largeNumChildren, largeNumRecords}
+}
 
 type specs struct {
 	os        string
@@ -104,6 +119,7 @@ func main() {
 		&gjsonValidatePkg,
 		&sonicPkg,
 		&sonicValidatePkg,
+		&codecPkg,
 	}
 	for _, s := range []*suite{
 		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},
@@ -152,7 +168,7 @@ func (s *suite) exec(pkgs []*pkg) {
 		results = append(results, &r)
 		if c == nil {
 			r.call = &call{ns: math.MaxInt64, err: fmt.Errorf("not supported")}
-			fmt.Printf(" %8s >>> not supported <<<\n", p.name)
+			fmt.Printf(" %12s >>> not supported <<<\n", p.name)
 			continue
 		}
 		if r.ref {
@@ -162,17 +178,17 @@ func (s *suite) exec(pkgs []*pkg) {
 		if benchErr != nil {
 			c.err = benchErr
 			c.ns = math.MaxInt64
-			fmt.Printf(" %8s.%-11s >>> %s <<<\n", p.name, c.name, benchErr)
+			fmt.Printf(" %12s.%-15s >>> %s <<<\n", p.name, c.name, benchErr)
 			continue
 		}
 		c.ns = c.res.NsPerOp()
 		c.bytes = c.res.AllocedBytesPerOp()
 		c.allocs = c.res.AllocsPerOp()
-		fmt.Printf(" %8s.%-11s %12d ns/op %12d B/op %12d allocs/op\n",
+		fmt.Printf(" %12s.%-15s %12d ns/op %12d B/op %12d allocs/op\n",
 			p.name, c.name, c.ns, c.bytes, c.allocs)
 	}
 	fmt.Println()
-	scale := 7 // TBD adjust to fit screen better?
+	scale := 4 // TBD adjust to fit screen better?
 	sort.Slice(results, func(i, j int) bool { return results[i].call.ns < results[j].call.ns })
 	for _, r := range results {
 		c := r.call
@@ -188,11 +204,11 @@ func (s *suite) exec(pkgs []*pkg) {
 				frac := int(size*8.0) - (int(size) * 8)
 				bar += string([]rune(blocks)[frac : frac+1])
 			} else {
-				fmt.Printf(" %8s >>> %s <<<\n", r.pkg, c.err)
+				fmt.Printf(" %12s >>> %s <<<\n", r.pkg, c.err)
 				continue
 			}
 		}
-		fmt.Printf(" %8s %s %3.2f\n", r.pkg, bar, x)
+		fmt.Printf(" %12s %s %3.2f\n", r.pkg, bar, x)
 	}
 }
 
@@ -214,15 +230,15 @@ func lineCounter(r io.Reader) (int, error) {
 func openSmallLogFile() *os.File {
 	f, err := os.Open(smallLogFile)
 	if err != nil {
-		if err = createLogFile(smallLogFile, smallSize); err != nil {
+		if err = createLogFile(smallLogFile, false, smallSize); err != nil {
 			log.Fatalf("Failed to create %s. %s\n", smallLogFile, err)
 		}
 		if f, err = os.Open(smallLogFile); err != nil {
 			log.Fatalf("Failed to open %s. %s\n", smallLogFile, err)
 		}
 	}
-	if smallLogFileLen == 0 {
-		if smallLogFileLen, err = lineCounter(f); err != nil {
+	if smallNumRecords == 0 {
+		if smallNumRecords, err = lineCounter(f); err != nil {
 			log.Fatalf("Failed to count lines in %s. %s\n", smallLogFile, err)
 		}
 	}
@@ -232,15 +248,15 @@ func openSmallLogFile() *os.File {
 func openLargeLogFile() *os.File {
 	f, err := os.Open(largeLogFile)
 	if err != nil {
-		if err = createLogFile(largeLogFile, largeSize); err != nil {
+		if err = createLogFile(largeLogFile, true, largeSize); err != nil {
 			log.Fatalf("Failed to create %s. %s\n", largeLogFile, err)
 		}
 		if f, err = os.Open(largeLogFile); err != nil {
 			log.Fatalf("Failed to open %s. %s\n", largeLogFile, err)
 		}
 	}
-	if largeLogFileLen == 0 {
-		if largeLogFileLen, err = lineCounter(f); err != nil {
+	if largeNumRecords == 0 {
+		if largeNumRecords, err = lineCounter(f); err != nil {
 			log.Fatalf("Failed to count lines in %s. %s\n", largeLogFile, err)
 		}
 	}
@@ -248,7 +264,7 @@ func openLargeLogFile() *os.File {
 }
 
 // size is in MB.
-func createLogFile(filename string, size int) error {
+func createLogFile(filename string, largeRecord bool, size int) error {
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -272,7 +288,14 @@ func createLogFile(filename string, size int) error {
 	b.Pop()
 	_ = b.Value("benchmark-application", "who")
 	_ = b.Value("INFO", "level")
-	_ = b.Value(patientData, "patient")
+	// Add bunch of patient data to make the record large
+	if largeRecord {
+		for i := 0; i < 10; i++ {
+			_ = b.Value(patientData, fmt.Sprintf("patient%d", i))
+		}
+	} else {
+		_ = b.Value(patientData, "patient")
+	}
 	b.PopAll()
 	entry := b.Result()
 

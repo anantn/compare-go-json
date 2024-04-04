@@ -14,21 +14,21 @@ import (
 )
 
 var jsonparserPkg = pkg{
-	name: "buger",
+	name: "jsonparser",
 	calls: map[string]*call{
 		"unmarshal-single-few-keys": {name: "Unmarshal", fun: jsonparserFile1},
 		"unmarshal-single-all-keys": {name: "Unmarshal", fun: jsonparserFile1All},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsonparserFileMany(b, openSmallLogFile(), smallLogFileLen)
+			jsonparserFileMany(b, smallTestFile())
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsonparserFileManyAll(b, openSmallLogFile(), smallLogFileLen)
+			jsonparserFileManyAll(b, smallTestFile())
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsonparserFileMany(b, openLargeLogFile(), largeLogFileLen)
+			jsonparserFileMany(b, largeTestFile())
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsonparserFileManyAll(b, openLargeLogFile(), largeLogFileLen)
+			jsonparserFileManyAll(b, largeTestFile())
 		}},
 	},
 }
@@ -121,14 +121,14 @@ func jsonparserVisitChildren(key []byte, value []byte, vt jsonparser.ValueType, 
 	return nil
 }
 
-func jsonparserFileMany(b *testing.B, f *os.File, count int) {
+func jsonparserFileMany(b *testing.B, f testfile) {
 	paths := [][]string{
 		{"what"},
 		{"where", "[0]", "line"},
 	}
 	var whatval string
 	var whereval int64
-	jsonparserCheckFileValues(b, f, count, func(j []byte) {
+	jsonparserCheckFileValues(b, f.handle, f.numRecords, func(j []byte) {
 		jsonparser.EachKey(j, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
 			switch idx {
 			case 0:
@@ -145,13 +145,13 @@ func jsonparserFileMany(b *testing.B, f *os.File, count int) {
 	})
 }
 
-func jsonparserFileManyAll(b *testing.B, f *os.File, count int) {
-	jsonparserCheckFileValues(b, f, count, func(j []byte) {
+func jsonparserFileManyAll(b *testing.B, f testfile) {
+	jsonparserCheckFileValues(b, f.handle, f.numRecords, func(j []byte) {
 		jsonparser.ObjectEach(j, jsonparserVisitChildren)
 
-		if jsonparserVisitCount != logNumChildren {
+		if jsonparserVisitCount != f.numChildren {
 			benchErr = fmt.Errorf("expected %d children, got %d",
-				logNumChildren, jsonparserVisitCount)
+				f.numChildren, jsonparserVisitCount)
 			b.Fail()
 		}
 		if jsonparserValueHolder == nil {

@@ -22,16 +22,16 @@ var fastjsonPkg = pkg{
 		"unmarshal-single-few-keys": {name: "Unmarshal", fun: fastjsonFile1},
 		"unmarshal-single-all-keys": {name: "Unmarshal", fun: fastjsonFile1All},
 		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileMany(b, openSmallLogFile(), smallLogFileLen)
+			fastjsonFileMany(b, smallTestFile())
 		}},
 		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileManyAll(b, openSmallLogFile(), smallLogFileLen)
+			fastjsonFileManyAll(b, smallTestFile())
 		}},
 		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileMany(b, openLargeLogFile(), largeLogFileLen)
+			fastjsonFileMany(b, largeTestFile())
 		}},
 		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileManyAll(b, openLargeLogFile(), largeLogFileLen)
+			fastjsonFileManyAll(b, largeTestFile())
 		}},
 		"marshal-builder": {name: "Marshal", fun: fastjsonMarshalBuilder},
 	},
@@ -178,8 +178,8 @@ func fastjsonVisitChildren(k []byte, v *fastjson.Value) {
 	}
 }
 
-func fastjsonFileMany(b *testing.B, f *os.File, count int) {
-	fastjsonCheckFileValues(b, f, count, func(val *fastjson.Value) {
+func fastjsonFileMany(b *testing.B, f testfile) {
+	fastjsonCheckFileValues(b, f.handle, f.numRecords, func(val *fastjson.Value) {
 		whatval := val.GetStringBytes("what")
 		whereval := val.GetInt("where", "0", "line")
 		err := checkLog(string(whatval), whereval)
@@ -190,13 +190,13 @@ func fastjsonFileMany(b *testing.B, f *os.File, count int) {
 	})
 }
 
-func fastjsonFileManyAll(b *testing.B, f *os.File, count int) {
-	fastjsonCheckFileValues(b, f, count, func(val *fastjson.Value) {
+func fastjsonFileManyAll(b *testing.B, f testfile) {
+	fastjsonCheckFileValues(b, f.handle, f.numRecords, func(val *fastjson.Value) {
 		obj, _ := val.Object()
 		obj.Visit(fastjsonVisitChildren)
-		if fastjsonVisitCount != logNumChildren {
+		if fastjsonVisitCount != f.numChildren {
 			benchErr = fmt.Errorf("expected %d children, got %d",
-				logNumChildren, fastjsonVisitCount)
+				f.numChildren, fastjsonVisitCount)
 			b.Fail()
 		}
 		if fastjsonValueHolder == nil {

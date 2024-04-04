@@ -14,6 +14,7 @@ require (
 	github.com/segmentio/encoding v0.4.0
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/sjson v1.2.5
+	github.com/ugorji/go/codec v1.2.12
 	github.com/valyala/fastjson v1.6.4
 )
 
