@@ -87,6 +87,7 @@ func ojMarshalBuilder(b *testing.B) {
 	}
 }
 
+/*
 func ojFile1Few(b *testing.B) {
 	sample, _ := os.ReadFile(filename)
 	ojp := oj.Parser{Reuse: true}
@@ -103,6 +104,7 @@ func ojFile1Few(b *testing.B) {
 		}
 	}
 }
+*/
 
 func ojFile1All(b *testing.B, useStruct bool) {
 	sample, _ := os.ReadFile(filename)
