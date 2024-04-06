@@ -23,27 +23,27 @@ var gjsonPkg = pkg{
 	calls: map[string]*call{
 		"validate-bytes":  {name: "Validate", fun: gjsonValidate},
 		"validate-string": {name: "Validate", fun: gjsonValidateString},
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFile1(b)
+			gjsonFile1Few(b)
 		}},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
 			gjsonFile1All(b)
 		}},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFileMany(b, smallTestFile())
+			gjsonFileManyFew(b, smallTestFile())
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
 			gjsonFileManyAll(b, smallTestFile())
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFileMany(b, largeTestFile())
+			gjsonFileManyFew(b, largeTestFile())
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
 			gjsonFileManyAll(b, largeTestFile())
 		}},
@@ -54,27 +54,27 @@ var gjsonPkg = pkg{
 var gjsonValidatePkg = pkg{
 	name: "gjson-v",
 	calls: map[string]*call{
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFile1(b)
+			gjsonFile1Few(b)
 		}},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
 			gjsonFile1All(b)
 		}},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFileMany(b, smallTestFile())
+			gjsonFileManyFew(b, smallTestFile())
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
 			gjsonFileManyAll(b, smallTestFile())
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFileMany(b, largeTestFile())
+			gjsonFileManyFew(b, largeTestFile())
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
 			gjsonFileManyAll(b, largeTestFile())
 		}},
@@ -123,7 +123,7 @@ func gjsonMarshalBuilder(b *testing.B) {
 	}
 }
 
-func gjsonFile1(b *testing.B) {
+func gjsonFile1Few(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -213,7 +213,7 @@ func gjsonVisitChildren(k, v gjson.Result) bool {
 	return true
 }
 
-func gjsonFileMany(b *testing.B, f testfile) {
+func gjsonFileManyFew(b *testing.B, f testfile) {
 	gjsonCheckFileValues(b, f.handle, f.numRecords, func(result gjson.Result) {
 		whatval := result.Get("what").String()
 		whereval := result.Get("where.0.line").Int()

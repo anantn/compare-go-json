@@ -16,24 +16,24 @@ import (
 var jsonparserPkg = pkg{
 	name: "jsonparser",
 	calls: map[string]*call{
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: jsonparserFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: jsonparserFile1All},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsonparserFileMany(b, smallTestFile())
+		"single-few-keys": {name: "Unmarshal", fun: jsonparserFile1Few},
+		"single-all-keys": {name: "Unmarshal", fun: jsonparserFile1All},
+		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsonparserFileManyFew(b, smallTestFile())
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			jsonparserFileManyAll(b, smallTestFile())
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsonparserFileMany(b, largeTestFile())
+		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsonparserFileManyFew(b, largeTestFile())
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			jsonparserFileManyAll(b, largeTestFile())
 		}},
 	},
 }
 
-func jsonparserFile1(b *testing.B) {
+func jsonparserFile1Few(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -121,7 +121,7 @@ func jsonparserVisitChildren(key []byte, value []byte, vt jsonparser.ValueType, 
 	return nil
 }
 
-func jsonparserFileMany(b *testing.B, f testfile) {
+func jsonparserFileManyFew(b *testing.B, f testfile) {
 	paths := [][]string{
 		{"what"},
 		{"where", "[0]", "line"},

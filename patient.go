@@ -159,33 +159,19 @@ func checkPatient(strval string, arrval int, boolval bool) error {
 }
 
 func checkPatientStruct(p PartialPatient) error {
+	if len(p.Identifier) < 1 {
+		return fmt.Errorf("expected 1+ identifier, got %d", len(p.Identifier))
+	}
+	if len(p.Identifier[0].Type.Coding) < 1 {
+		return fmt.Errorf("expected 1+ coding, got %d", len(p.Identifier[0].Type.Coding))
+	}
+	if len(p.Name) < 1 {
+		return fmt.Errorf("expected 1+ name, got %d", len(p.Name))
+	}
 	return checkPatient(
 		p.Identifier[0].Type.Coding[0].Code,
 		len(p.Name[0].Given),
 		p.DeceasedBoolean)
-}
-
-func checkPatientInterface(p interface{}) error {
-	m, _ := p.(map[string]interface{})
-	identifier, _ := m["identifier"].([]interface{})
-	if len(identifier) != 1 {
-		return fmt.Errorf("expected 1 identifier got %d", len(identifier))
-	}
-	identifier0, _ := identifier[0].(map[string]interface{})
-	typ, _ := identifier0["type"].(map[string]interface{})
-	coding, _ := typ["coding"].([]interface{})
-	if len(coding) < 1 {
-		return fmt.Errorf("expected >1 coding got %d", len(coding))
-	}
-	coding0, _ := coding[0].(map[string]interface{})
-	code, _ := coding0["code"].(string)
-	name, _ := m["name"].([]interface{})
-	if len(name) < 1 {
-		return fmt.Errorf("expected >1 name got %d", len(name))
-	}
-	name0, _ := name[0].(map[string]interface{})
-	given, _ := name0["given"].([]interface{})
-	return checkPatient(code, len(given), false)
 }
 
 type PartialLog struct {
@@ -218,19 +204,10 @@ func checkLog(what string, where int) error {
 }
 
 func checkLogStruct(l PartialLog) error {
-	return checkLog(l.What, l.Where[0].Line)
-}
-
-func checkLogInterface(data interface{}) error {
-	m, _ := data.(map[string]interface{})
-	what, _ := m["what"].(string)
-	where, _ := m["where"].([]interface{})
-	if len(where) != 1 {
-		return fmt.Errorf("expected 1 where got %d", len(where))
+	if len(l.Where) < 1 {
+		return fmt.Errorf("expected 1+ where, got %d", len(l.Where))
 	}
-	wm, _ := where[0].(map[string]interface{})
-	line, _ := wm["line"].(float64)
-	return checkLog(what, int(line))
+	return checkLog(l.What, l.Where[0].Line)
 }
 
 func checkMarshalCustom(data string) error {

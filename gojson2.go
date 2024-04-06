@@ -15,23 +15,32 @@ import (
 var json2Pkg = pkg{
 	name: "json2",
 	calls: map[string]*call{
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			go2File1(b, false)
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			go2File1Few(b)
 		}},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			go2File1All(b, false)
 		}},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			go2FileMany(b, openSmallLogFile(), false)
+		"single-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			go2File1All(b, true)
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			go2FileManyFew(b, openSmallLogFile())
+		}},
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			go2FileManyAll(b, openSmallLogFile(), false)
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			go2FileMany(b, openLargeLogFile(), false)
+		"small-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			go2FileManyAll(b, openSmallLogFile(), true)
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			go2FileManyFew(b, openLargeLogFile())
+		}},
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			go2FileManyAll(b, openLargeLogFile(), false)
+		}},
+		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			go2FileManyAll(b, openLargeLogFile(), true)
 		}},
 		"marshal-builder": {name: "Marshal", fun: go2MarshalBuilder},
 	},
@@ -53,7 +62,7 @@ func go2MarshalBuilder(b *testing.B) {
 	}
 }
 
-func go2File1(b *testing.B, useStruct bool) {
+func go2File1Few(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -62,27 +71,14 @@ func go2File1(b *testing.B, useStruct bool) {
 	b.ResetTimer()
 
 	var p PartialPatient
-	var pi interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
-		if useStruct {
-			if err := json2.UnmarshalRead(f, &p); err != nil && err != io.EOF {
-				benchErr = err
-				b.Fail()
-			}
-			if err = checkPatientStruct(p); err != nil {
-				benchErr = err
-				b.Fail()
-			}
-		} else {
-			if err := json2.UnmarshalRead(f, &pi); err != nil && err != io.EOF {
-				benchErr = err
-				b.Fail()
-			}
-			if err = checkPatientInterface(pi); err != nil {
-				benchErr = err
-				b.Fail()
-			}
+		if err := json2.UnmarshalRead(f, &p); err != nil && err != io.EOF {
+			benchErr = err
+			b.Fail()
+		} else if err = checkPatientStruct(p); err != nil {
+			benchErr = err
+			b.Fail()
 		}
 	}
 }
@@ -113,36 +109,23 @@ func go2File1All(b *testing.B, useStruct bool) {
 	}
 }
 
-func go2FileMany(b *testing.B, f *os.File, useStruct bool) {
+func go2FileManyFew(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
 	var l PartialLog
-	var li interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		dec := jsontext.NewDecoder(f)
 		for {
-			if useStruct {
-				if err := json2.UnmarshalDecode(dec, &l); err == io.EOF {
-					break
-				} else if err != nil {
-					benchErr = err
-					b.Fail()
-				} else if err = checkLog(l.What, l.Where[0].Line); err != nil {
-					benchErr = err
-					b.Fail()
-				}
-			} else {
-				if err := json2.UnmarshalDecode(dec, &li); err == io.EOF {
-					break
-				} else if err != nil {
-					benchErr = err
-					b.Fail()
-				} else if err = checkLogInterface(li); err != nil {
-					benchErr = err
-					b.Fail()
-				}
+			if err := json2.UnmarshalDecode(dec, &l); err == io.EOF {
+				break
+			} else if err != nil {
+				benchErr = err
+				b.Fail()
+			} else if err = checkLogStruct(l); err != nil {
+				benchErr = err
+				b.Fail()
 			}
 		}
 	}

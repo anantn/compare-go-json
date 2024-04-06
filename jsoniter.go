@@ -17,20 +17,33 @@ var jsoni = jsoniter.ConfigFastest
 var jsoniterPkg = pkg{
 	name: "jsoniter",
 	calls: map[string]*call{
-		"validate-bytes":            {name: "Validate", fun: jsoniterValidate},
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: jsoniterFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: jsoniterFile1All},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsoniterFileMany(b, openSmallLogFile())
+		"validate-bytes": {name: "Validate", fun: jsoniterValidate},
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFile1Few(b)
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsoniterFileManyAll(b, openSmallLogFile())
+		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFile1All(b, false)
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsoniterFileMany(b, openLargeLogFile())
+		"single-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFile1All(b, true)
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsoniterFileManyAll(b, openLargeLogFile())
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileManyFew(b, openSmallLogFile())
+		}},
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileManyAll(b, openSmallLogFile(), false)
+		}},
+		"small-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileManyAll(b, openSmallLogFile(), true)
+		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileManyFew(b, openLargeLogFile())
+		}},
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileManyAll(b, openLargeLogFile(), false)
+		}},
+		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsoniterFileManyAll(b, openLargeLogFile(), true)
 		}},
 		"marshal-builder": {name: "Marshal", fun: jsoniterMarshalBuilder},
 	},
@@ -63,7 +76,7 @@ func jsoniterMarshalBuilder(b *testing.B) {
 	}
 }
 
-func jsoniterFile1(b *testing.B) {
+func jsoniterFile1Few(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -78,15 +91,14 @@ func jsoniterFile1(b *testing.B) {
 		if err := jsoni.Unmarshal(j, &p); err != nil {
 			benchErr = err
 			b.Fail()
-		}
-		if err := checkPatientStruct(p); err != nil {
+		} else if err := checkPatientStruct(p); err != nil {
 			benchErr = err
 			b.Fail()
 		}
 	}
 }
 
-func jsoniterFile1All(b *testing.B) {
+func jsoniterFile1All(b *testing.B, useStruct bool) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -95,17 +107,25 @@ func jsoniterFile1All(b *testing.B) {
 	b.ResetTimer()
 
 	var p Patient
+	var pi interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		if err := jsoni.Unmarshal(j, &p); err != nil {
-			benchErr = err
-			b.Fail()
+		if useStruct {
+			if err := jsoni.Unmarshal(j, &p); err != nil {
+				benchErr = err
+				b.Fail()
+			}
+		} else {
+			if err := jsoni.Unmarshal(j, &pi); err != nil {
+				benchErr = err
+				b.Fail()
+			}
 		}
 	}
 }
 
-func jsoniterFileMany(b *testing.B, f *os.File) {
+func jsoniterFileManyFew(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
@@ -126,18 +146,26 @@ func jsoniterFileMany(b *testing.B, f *os.File) {
 	}
 }
 
-func jsoniterFileManyAll(b *testing.B, f *os.File) {
+func jsoniterFileManyAll(b *testing.B, f *os.File, useStruct bool) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
-	var data interface{}
+	var l FullLog
+	var li interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
-			if err := jsoni.Unmarshal(buf.Bytes(), &data); err != nil {
-				benchErr = err
-				b.Fail()
+			if useStruct {
+				if err := jsoni.Unmarshal(buf.Bytes(), &l); err != nil {
+					benchErr = err
+					b.Fail()
+				}
+			} else {
+				if err := jsoni.Unmarshal(buf.Bytes(), &li); err != nil {
+					benchErr = err
+					b.Fail()
+				}
 			}
 		}
 	}

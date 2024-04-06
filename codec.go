@@ -17,23 +17,32 @@ var jsonHandle codec.Handle = new(codec.JsonHandle)
 var codecPkg = pkg{
 	name: "codec",
 	calls: map[string]*call{
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			codecFile1(b, false)
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			codecFile1Few(b)
 		}},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			codecFile1All(b, false)
 		}},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			codecFileMany(b, openSmallLogFile(), false)
+		"single-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			codecFile1All(b, true)
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			codecFileManyFew(b, openSmallLogFile())
+		}},
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			codecFileManyAll(b, openSmallLogFile(), false)
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			codecFileMany(b, openLargeLogFile(), false)
+		"small-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			codecFileManyAll(b, openSmallLogFile(), true)
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			codecFileManyFew(b, openLargeLogFile())
+		}},
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			codecFileManyAll(b, openLargeLogFile(), false)
+		}},
+		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			codecFileManyAll(b, openLargeLogFile(), true)
 		}},
 		"marshal-builder": {name: "Marshal", fun: codecMarshalBuilder},
 	},
@@ -58,7 +67,7 @@ func codecMarshalBuilder(b *testing.B) {
 	}
 }
 
-func codecFile1(b *testing.B, useStruct bool) {
+func codecFile1Few(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -67,29 +76,17 @@ func codecFile1(b *testing.B, useStruct bool) {
 	b.ResetTimer()
 
 	var p PartialPatient
-	var pi interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
 		var decoder = codec.NewDecoderBytes(j, jsonHandle)
-		if useStruct {
-			if err := decoder.Decode(&p); err != nil {
-				benchErr = err
-				b.Fail()
-			}
-			if err := checkPatientStruct(p); err != nil {
-				benchErr = err
-				b.Fail()
-			}
-		} else {
-			if err := decoder.Decode(&pi); err != nil {
-				benchErr = err
-				b.Fail()
-			}
-			if err := checkPatientInterface(pi); err != nil {
-				benchErr = err
-				b.Fail()
-			}
+		if err := decoder.Decode(&p); err != nil {
+			benchErr = err
+			b.Fail()
+		}
+		if err := checkPatientStruct(p); err != nil {
+			benchErr = err
+			b.Fail()
 		}
 	}
 }
@@ -122,35 +119,23 @@ func codecFile1All(b *testing.B, useStruct bool) {
 	}
 }
 
-func codecFileMany(b *testing.B, f *os.File, useStruct bool) {
+func codecFileManyFew(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
 	var l PartialLog
-	var li interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
 			var decoder = codec.NewDecoderBytes(buf.Bytes(), jsonHandle)
-			if useStruct {
-				if err := decoder.Decode(&l); err != nil {
-					benchErr = err
-					b.Fail()
-				}
-				if err := checkLogStruct(l); err != nil {
-					benchErr = err
-					b.Fail()
-				}
-			} else {
-				if err := decoder.Decode(&li); err != nil {
-					benchErr = err
-					b.Fail()
-				}
-				if err := checkLogInterface(li); err != nil {
-					benchErr = err
-					b.Fail()
-				}
+			if err := decoder.Decode(&l); err != nil {
+				benchErr = err
+				b.Fail()
+			}
+			if err := checkLogStruct(l); err != nil {
+				benchErr = err
+				b.Fail()
 			}
 		}
 	}

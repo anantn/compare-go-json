@@ -16,20 +16,33 @@ import (
 var segmentPkg = pkg{
 	name: "segment",
 	calls: map[string]*call{
-		"validate-bytes":            {name: "Validate", fun: segmentValidate},
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: segmentFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: segmentFile1All},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			segmentFileMany(b, openSmallLogFile())
+		"validate-bytes": {name: "Validate", fun: segmentValidate},
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFile1Few(b)
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			segmentFileManyAll(b, openSmallLogFile())
+		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFile1All(b, false)
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			segmentFileMany(b, openLargeLogFile())
+		"single-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFile1All(b, true)
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			segmentFileManyAll(b, openLargeLogFile())
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFileManyFew(b, openSmallLogFile())
+		}},
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFileManyAll(b, openSmallLogFile(), false)
+		}},
+		"small-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFileManyAll(b, openSmallLogFile(), true)
+		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFileManyFew(b, openLargeLogFile())
+		}},
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFileManyAll(b, openLargeLogFile(), false)
+		}},
+		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			segmentFileManyAll(b, openLargeLogFile(), true)
 		}},
 		"marshal-builder": {name: "Marshal", fun: segmentMarshalBuilder},
 	},
@@ -62,7 +75,7 @@ func segmentMarshalBuilder(b *testing.B) {
 	}
 }
 
-func segmentFile1(b *testing.B) {
+func segmentFile1Few(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -85,7 +98,7 @@ func segmentFile1(b *testing.B) {
 	}
 }
 
-func segmentFile1All(b *testing.B) {
+func segmentFile1All(b *testing.B, useStruct bool) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -94,17 +107,25 @@ func segmentFile1All(b *testing.B) {
 	b.ResetTimer()
 
 	var p Patient
+	var pi interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		if err := segment.Unmarshal(j, &p); err != nil {
-			benchErr = err
-			b.Fail()
+		if useStruct {
+			if err := segment.Unmarshal(j, &p); err != nil {
+				benchErr = err
+				b.Fail()
+			}
+		} else {
+			if err := segment.Unmarshal(j, &pi); err != nil {
+				benchErr = err
+				b.Fail()
+			}
 		}
 	}
 }
 
-func segmentFileMany(b *testing.B, f *os.File) {
+func segmentFileManyFew(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
@@ -116,8 +137,7 @@ func segmentFileMany(b *testing.B, f *os.File) {
 			if err := segment.Unmarshal(buf.Bytes(), &l); err != nil {
 				benchErr = err
 				b.Fail()
-			}
-			if err := checkLog(l.What, l.Where[0].Line); err != nil {
+			} else if err := checkLogStruct(l); err != nil {
 				benchErr = err
 				b.Fail()
 			}
@@ -125,18 +145,26 @@ func segmentFileMany(b *testing.B, f *os.File) {
 	}
 }
 
-func segmentFileManyAll(b *testing.B, f *os.File) {
+func segmentFileManyAll(b *testing.B, f *os.File, useStruct bool) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
-	var data interface{}
+	var l FullLog
+	var li interface{}
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		buf := bufio.NewScanner(f)
 		for buf.Scan() {
-			if err := segment.Unmarshal(buf.Bytes(), &data); err != nil {
-				benchErr = err
-				b.Fail()
+			if useStruct {
+				if err := segment.Unmarshal(buf.Bytes(), &l); err != nil {
+					benchErr = err
+					b.Fail()
+				}
+			} else {
+				if err := segment.Unmarshal(buf.Bytes(), &li); err != nil {
+					benchErr = err
+					b.Fail()
+				}
 			}
 		}
 	}

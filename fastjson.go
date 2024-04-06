@@ -17,20 +17,24 @@ import (
 var fastjsonPkg = pkg{
 	name: "fastjson",
 	calls: map[string]*call{
-		"validate-bytes":            {name: "Validate", fun: fastjsonValidate},
-		"validate-string":           {name: "Validate", fun: fastjsonValidateString},
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: fastjsonFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: fastjsonFile1All},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileMany(b, smallTestFile())
+		"validate-bytes":  {name: "Validate", fun: fastjsonValidate},
+		"validate-string": {name: "Validate", fun: fastjsonValidateString},
+		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFile1Few(b)
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFile1All(b)
+		}},
+		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFileManyFew(b, smallTestFile())
+		}},
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			fastjsonFileManyAll(b, smallTestFile())
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileMany(b, largeTestFile())
+		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFileManyFew(b, largeTestFile())
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			fastjsonFileManyAll(b, largeTestFile())
 		}},
 		"marshal-builder": {name: "Marshal", fun: fastjsonMarshalBuilder},
@@ -83,7 +87,7 @@ func fastjsonMarshalBuilder(b *testing.B) {
 	}
 }
 
-func fastjsonFile1(b *testing.B) {
+func fastjsonFile1Few(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -178,7 +182,7 @@ func fastjsonVisitChildren(k []byte, v *fastjson.Value) {
 	}
 }
 
-func fastjsonFileMany(b *testing.B, f testfile) {
+func fastjsonFileManyFew(b *testing.B, f testfile) {
 	fastjsonCheckFileValues(b, f.handle, f.numRecords, func(val *fastjson.Value) {
 		whatval := val.GetStringBytes("what")
 		whereval := val.GetInt("where", "0", "line")

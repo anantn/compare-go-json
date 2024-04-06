@@ -15,23 +15,47 @@ import (
 var jsonPkg = pkg{
 	name: "json",
 	calls: map[string]*call{
-		"validate-string":           {name: "Validate", fun: goValidate},
-		"validate-bytes":            {name: "Validate", fun: goValidate},
-		"unmarshal-single-few-keys": {name: "Unmarshal", fun: goFile1},
-		"unmarshal-single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+		"validate-string": {name: "Validate", fun: goValidate},
+		"validate-bytes":  {name: "Validate", fun: goValidate},
+
+		// Allow partial reading into struct just to get baseline
+		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFile1Few(b)
+		}},
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFile1Few(b)
+		}},
+		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			goFile1All(b, false)
 		}},
-		"unmarshal-small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			goFileMany(b, openSmallLogFile())
+		"single-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFile1All(b, true)
 		}},
-		"unmarshal-small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+
+		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileManyFew(b, openSmallLogFile())
+		}},
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileManyFew(b, openSmallLogFile())
+		}},
+		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			goFileManyAll(b, openSmallLogFile(), false)
 		}},
-		"unmarshal-large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			goFileMany(b, openLargeLogFile())
+		"small-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileManyAll(b, openSmallLogFile(), true)
 		}},
-		"unmarshal-large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+
+		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileManyFew(b, openLargeLogFile())
+		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileManyFew(b, openLargeLogFile())
+		}},
+		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			goFileManyAll(b, openLargeLogFile(), false)
+		}},
+		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			goFileManyAll(b, openLargeLogFile(), true)
 		}},
 		"marshal-builder": {name: "Marshal", fun: goMarshalBuilder},
 	},
@@ -64,7 +88,7 @@ func goMarshalBuilder(b *testing.B) {
 	}
 }
 
-func goFile1(b *testing.B) {
+func goFile1Few(b *testing.B) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -72,7 +96,6 @@ func goFile1(b *testing.B) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
-	// Allow partial reading into struct just to get baseline
 	var p PartialPatient
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
@@ -80,8 +103,7 @@ func goFile1(b *testing.B) {
 		if err := json.Unmarshal(j, &p); err != nil {
 			benchErr = err
 			b.Fail()
-		}
-		if err = checkPatientStruct(p); err != nil {
+		} else if err = checkPatientStruct(p); err != nil {
 			benchErr = err
 			b.Fail()
 		}
@@ -115,11 +137,10 @@ func goFile1All(b *testing.B, useStruct bool) {
 	}
 }
 
-func goFileMany(b *testing.B, f *os.File) {
+func goFileManyFew(b *testing.B, f *os.File) {
 	defer func() { _ = f.Close() }()
 	b.ResetTimer()
 
-	// Allow partial reading into struct just to get baseline
 	var l PartialLog
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
@@ -128,7 +149,7 @@ func goFileMany(b *testing.B, f *os.File) {
 			if err := json.Unmarshal(scanner.Bytes(), &l); err != nil {
 				benchErr = err
 				b.Fail()
-			} else if err = checkLog(l.What, l.Where[0].Line); err != nil {
+			} else if err = checkLogStruct(l); err != nil {
 				benchErr = err
 				b.Fail()
 			}
