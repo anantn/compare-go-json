@@ -29,9 +29,11 @@ const (
 
 var (
 	filename          = "data/patient.json"
+	singleNumRootKeys = 14
 	singleNumChildren = 116
 	benchErr          error
 
+	logNumRootKeys   = 6
 	smallNumChildren = 126
 	smallLogFile     = "data/log-small.json"
 	smallSize        = 100
@@ -123,6 +125,7 @@ func main() {
 		&codecPkg,
 		&jinPkg,
 		&jasonPkg,
+		&djsonPkg,
 	}
 	for _, s := range []*suite{
 		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},
