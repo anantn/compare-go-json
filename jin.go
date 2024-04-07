@@ -93,7 +93,7 @@ func jinFile1All(b *testing.B) {
 		jinValueHolder = nil
 		err := jinIterate(j)
 		if err != nil {
-			benchErr = fmt.Errorf("expected a value, got nil")
+			benchErr = err
 			b.Fail()
 		}
 		// Includes root object
