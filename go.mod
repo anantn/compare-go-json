@@ -18,6 +18,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	github.com/ugorji/go/codec v1.2.12
 	github.com/valyala/fastjson v1.6.4
+	github.com/willabides/rjson v0.2.0
 )
 
 require (
