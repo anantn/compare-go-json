@@ -127,6 +127,7 @@ func main() {
 		&jasonPkg,
 		&djsonPkg,
 		&ffjsonPkg,
+		&easyjsonPkg,
 	}
 	for _, s := range []*suite{
 		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},
