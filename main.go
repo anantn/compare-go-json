@@ -106,6 +106,7 @@ func main() {
 	if s != nil && strings.Contains(s.os, "mac") {
 		sonicPkg.calls = map[string]*call{}
 		sonicValidatePkg.calls = map[string]*call{}
+		simdjsonPkg.calls = map[string]*call{}
 	}
 
 	pkgs := []*pkg{
