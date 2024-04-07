@@ -20,24 +20,33 @@ var fastjsonPkg = pkg{
 		"validate-bytes":  {name: "Validate", fun: fastjsonValidate},
 		"validate-string": {name: "Validate", fun: fastjsonValidateString},
 		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFile1Few(b)
+			fastjsonFile1Few(b, false)
 		}},
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFile1Few(b, true)
+		}, caveat: true},
 		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			fastjsonFile1All(b)
 		}},
 		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileManyFew(b, smallTestFile())
+			fastjsonFileManyFew(b, smallTestFile(), false)
 		}},
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFileManyFew(b, smallTestFile(), true)
+		}, caveat: true},
 		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			fastjsonFileManyAll(b, smallTestFile())
 		}},
 		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			fastjsonFileManyFew(b, largeTestFile())
+			fastjsonFileManyFew(b, largeTestFile(), false)
 		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			fastjsonFileManyFew(b, largeTestFile(), true)
+		}, caveat: true},
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			fastjsonFileManyAll(b, largeTestFile())
 		}},
-		"marshal-builder": {name: "Marshal", fun: fastjsonMarshalBuilder},
+		"marshal-builder": {name: "Marshal", fun: fastjsonMarshalBuilder, caveat: true},
 	},
 }
 
@@ -87,19 +96,20 @@ func fastjsonMarshalBuilder(b *testing.B) {
 	}
 }
 
-func fastjsonFile1Few(b *testing.B) {
+func fastjsonFile1Few(b *testing.B, useStruct bool) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
 	}
 	defer func() { _ = f.Close() }()
 
-	var p fastjson.Parser
+	var parser fastjson.Parser
+	var p = getEmptyPartialPatient()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
-		if val, err := p.ParseBytes(j); err != nil {
+		if val, err := parser.ParseBytes(j); err != nil {
 			benchErr = err
 			b.Fail()
 		} else {
@@ -110,7 +120,18 @@ func fastjsonFile1Few(b *testing.B) {
 			strtest := val.GetStringBytes("identifier", "0", "type", "coding", "0", "code")
 			arrtest := val.GetArray("name", "2", "given")
 			booltest := val.GetBool("deceasedBoolean")
-			err = checkPatient(string(strtest), len(arrtest), booltest)
+
+			if useStruct {
+				p.Identifier[0].Type.Coding[0].Code = string(strtest)
+				p.Name[0].Given = make([]string, len(arrtest))
+				for i, v := range arrtest {
+					p.Name[0].Given[i] = string(v.GetStringBytes())
+				}
+				p.DeceasedBoolean = booltest
+				err = checkPatientStruct(p)
+			} else {
+				err = checkPatient(string(strtest), len(arrtest), booltest)
+			}
 			if err != nil {
 				benchErr = err
 				b.Fail()
@@ -182,11 +203,20 @@ func fastjsonVisitChildren(k []byte, v *fastjson.Value) {
 	}
 }
 
-func fastjsonFileManyFew(b *testing.B, f testfile) {
+func fastjsonFileManyFew(b *testing.B, f testfile, useStruct bool) {
+	var err error
+	var l = getEmptyPartialLog()
 	fastjsonCheckFileValues(b, f.handle, f.numRecords, func(val *fastjson.Value) {
 		whatval := val.GetStringBytes("what")
 		whereval := val.GetInt("where", "0", "line")
-		err := checkLog(string(whatval), whereval)
+
+		if useStruct {
+			l.What = string(whatval)
+			l.Where[0].Line = int(whereval)
+			err = checkLogStruct(l)
+		} else {
+			err = checkLog(string(whatval), whereval)
+		}
 		if err != nil {
 			benchErr = err
 			b.Fail()

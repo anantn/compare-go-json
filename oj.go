@@ -44,7 +44,6 @@ var ojPkg = pkg{
 		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			ojFileManyAll(b, openSmallLogFile(), false)
 		}},
-
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			ojFileManyAll(b, openLargeLogFile(), false)
 		}},

@@ -76,6 +76,7 @@ type call struct {
 	bytes  int64 // base adjusted
 	allocs int64 // base adjusted
 	err    error
+	caveat bool
 }
 
 type pkg struct {
@@ -131,8 +132,6 @@ func main() {
 		&easyjsonPkg,
 	}
 	for _, s := range []*suite{
-		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},
-		{fun: "validate-string", title: "Validate string", ref: "json"},
 		{fun: "single-few-keys", title: "Unmarshal single record (2kb), read few keys generically", ref: "json"},
 		{fun: "single-few-keys-struct", title: "Unmarshal single record (2kb), read few keys into struct", ref: "json"},
 		{fun: "single-all-keys", title: "Unmarshal single record (2kb), read all keys generically", ref: "json"},
@@ -146,6 +145,8 @@ func main() {
 		{fun: "large-file-all-keys", title: "Unmarshal many records from (25kb each) semi-large file (5GB), read all keys generically", ref: "json"},
 		{fun: "large-file-all-keys-struct", title: "Unmarshal many records from (25kb each) semi-large file (5GB), read all keys into struct", ref: "json"},
 		{fun: "marshal-builder", title: "Marshal custom data through an object builder", ref: "json"},
+		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},
+		{fun: "validate-string", title: "Validate string", ref: "json"},
 	} {
 		s.exec(pkgs)
 	}
@@ -223,7 +224,11 @@ func (s *suite) exec(pkgs []*pkg) {
 				continue
 			}
 		}
-		fmt.Printf(" %12s %s %3.2f\n", r.pkg, bar, x)
+		caveat := ""
+		if c.caveat {
+			caveat = "* "
+		}
+		fmt.Printf(" %12s %s %3.2f\n", caveat+r.pkg, bar, x)
 	}
 }
 

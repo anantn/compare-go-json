@@ -17,14 +17,20 @@ var simdjsonPkg = pkg{
 	calls: map[string]*call{
 		"single-all-keys": {name: "Unmarshal", fun: simdjsonFile1All},
 		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			simdjsonFileManyFew(b, smallTestFile())
+			simdjsonFileManyFew(b, smallTestFile(), false)
 		}},
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			simdjsonFileManyFew(b, smallTestFile(), true)
+		}, caveat: true},
 		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			simdjsonFileManyAll(b, smallTestFile())
 		}},
 		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			simdjsonFileManyFew(b, largeTestFile())
+			simdjsonFileManyFew(b, largeTestFile(), false)
 		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			simdjsonFileManyFew(b, largeTestFile(), true)
+		}, caveat: true},
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			simdjsonFileManyAll(b, largeTestFile())
 		}},
@@ -68,10 +74,11 @@ func simdjsonFile1All(b *testing.B) {
 
 // Selecting only a few fields is so painful to write, we are not doing it
 // for simdjsonFile1 methods but only here.
-func simdjsonFileManyFew(b *testing.B, t testfile) {
+func simdjsonFileManyFew(b *testing.B, t testfile, useStruct bool) {
 	defer func() { _ = t.handle.Close() }()
 
 	b.ResetTimer()
+	var l = getEmptyPartialLog()
 	var obj = &simdjson.Object{}
 	var element = &simdjson.Element{}
 	for n := 0; n < b.N; n++ {
@@ -116,10 +123,15 @@ func simdjsonFileManyFew(b *testing.B, t testfile) {
 						}
 					}
 				}
-				if err = checkLog(whatval, int(whereval)); err != nil {
-					return err
+
+				if useStruct {
+					l.What = whatval
+					l.Where[0].Line = int(whereval)
+					err = checkLogStruct(l)
+				} else {
+					err = checkLog(whatval, int(whereval))
 				}
-				return nil
+				return err
 			})
 			if err != nil {
 				benchErr = err

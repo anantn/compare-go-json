@@ -145,6 +145,25 @@ type PartialPatient struct {
 	DeceasedBoolean bool `json:"deceasedBoolean"`
 }
 
+func getEmptyPartialPatient() PartialPatient {
+	p := PartialPatient{
+		Identifier: make([]struct {
+			Type struct {
+				Coding []struct {
+					Code string `json:"code"`
+				} `json:"coding"`
+			} `json:"type"`
+		}, 1),
+		Name: make([]struct {
+			Given []string `json:"given"`
+		}, 1),
+	}
+	p.Identifier[0].Type.Coding = make([]struct {
+		Code string `json:"code"`
+	}, 1)
+	return p
+}
+
 func checkPatient(strval string, arrval int, boolval bool) error {
 	if strval != "MR" {
 		return fmt.Errorf("expected MR, got %s", strval)
@@ -179,6 +198,14 @@ type PartialLog struct {
 	Where []struct {
 		Line int `json:"line"`
 	} `json:"where"`
+}
+
+func getEmptyPartialLog() PartialLog {
+	return PartialLog{
+		Where: make([]struct {
+			Line int `json:"line"`
+		}, 1),
+	}
 }
 
 type FullLog struct {

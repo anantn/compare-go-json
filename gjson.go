@@ -25,24 +25,36 @@ var gjsonPkg = pkg{
 		"validate-string": {name: "Validate", fun: gjsonValidateString},
 		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFile1Few(b)
+			gjsonFile1Few(b, false)
 		}},
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonShouldValidate = false
+			gjsonFile1Few(b, true)
+		}, caveat: true},
 		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
 			gjsonFile1All(b)
 		}},
 		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFileManyFew(b, smallTestFile())
+			gjsonFileManyFew(b, smallTestFile(), false)
 		}},
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonShouldValidate = false
+			gjsonFileManyFew(b, smallTestFile(), true)
+		}, caveat: true},
 		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
 			gjsonFileManyAll(b, smallTestFile())
 		}},
 		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
-			gjsonFileManyFew(b, largeTestFile())
+			gjsonFileManyFew(b, largeTestFile(), false)
 		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonShouldValidate = false
+			gjsonFileManyFew(b, largeTestFile(), true)
+		}, caveat: true},
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = false
 			gjsonFileManyAll(b, largeTestFile())
@@ -56,24 +68,36 @@ var gjsonValidatePkg = pkg{
 	calls: map[string]*call{
 		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFile1Few(b)
+			gjsonFile1Few(b, false)
 		}},
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonShouldValidate = true
+			gjsonFile1Few(b, true)
+		}, caveat: true},
 		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
 			gjsonFile1All(b)
 		}},
 		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFileManyFew(b, smallTestFile())
+			gjsonFileManyFew(b, smallTestFile(), false)
 		}},
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonShouldValidate = true
+			gjsonFileManyFew(b, smallTestFile(), true)
+		}, caveat: true},
 		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
 			gjsonFileManyAll(b, smallTestFile())
 		}},
 		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
-			gjsonFileManyFew(b, largeTestFile())
+			gjsonFileManyFew(b, largeTestFile(), false)
 		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			gjsonShouldValidate = true
+			gjsonFileManyFew(b, largeTestFile(), true)
+		}, caveat: true},
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			gjsonShouldValidate = true
 			gjsonFileManyAll(b, largeTestFile())
@@ -123,7 +147,7 @@ func gjsonMarshalBuilder(b *testing.B) {
 	}
 }
 
-func gjsonFile1Few(b *testing.B) {
+func gjsonFile1Few(b *testing.B, useStruct bool) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -131,6 +155,7 @@ func gjsonFile1Few(b *testing.B) {
 	defer func() { _ = f.Close() }()
 
 	b.ResetTimer()
+	var p = getEmptyPartialPatient()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
@@ -146,7 +171,18 @@ func gjsonFile1Few(b *testing.B) {
 			strtest := result.Get("identifier.0.type.coding.0.code").String()
 			arrtest := result.Get("name.2.given").Array()
 			booltest := result.Get("deceasedBoolean").Bool()
-			err = checkPatient(strtest, len(arrtest), booltest)
+
+			if useStruct {
+				p.Identifier[0].Type.Coding[0].Code = strtest
+				p.Name[0].Given = make([]string, len(arrtest))
+				for i, v := range arrtest {
+					p.Name[0].Given[i] = v.String()
+				}
+				p.DeceasedBoolean = booltest
+				err = checkPatientStruct(p)
+			} else {
+				err = checkPatient(strtest, len(arrtest), booltest)
+			}
 			if err != nil {
 				benchErr = err
 				b.Fail()
@@ -213,11 +249,20 @@ func gjsonVisitChildren(k, v gjson.Result) bool {
 	return true
 }
 
-func gjsonFileManyFew(b *testing.B, f testfile) {
+func gjsonFileManyFew(b *testing.B, f testfile, useStruct bool) {
+	var err error
+	var l = getEmptyPartialLog()
 	gjsonCheckFileValues(b, f.handle, f.numRecords, func(result gjson.Result) {
 		whatval := result.Get("what").String()
 		whereval := result.Get("where.0.line").Int()
-		err := checkLog(whatval, int(whereval))
+
+		if useStruct {
+			l.What = whatval
+			l.Where[0].Line = int(whereval)
+			err = checkLogStruct(l)
+		} else {
+			err = checkLog(whatval, int(whereval))
+		}
 		if err != nil {
 			benchErr = err
 			b.Fail()

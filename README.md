@@ -636,114 +636,32 @@ Tests run on:
 
 ## ARM64 (Mac - M1 Max)
 ```
-Validate []byte
-         json.Validate               10430 ns/op            0 B/op            0 allocs/op
-        json2 >>> not supported <<<
-           oj.Validate                3730 ns/op            0 B/op            0 allocs/op
-     fastjson.Validate                4868 ns/op            0 B/op            0 allocs/op
-     jsoniter.Validate                6758 ns/op         2184 B/op          100 allocs/op
-   jsonparser >>> not supported <<<
-        goccy.Validate               24413 ns/op        27603 B/op          463 allocs/op
-      segment.Validate                3580 ns/op            0 B/op            0 allocs/op
-     simdjson >>> not supported <<<
-        gjson.Validate                3520 ns/op            0 B/op            0 allocs/op
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-        gjson ███████████▊ 2.96
-      segment ███████████▋ 2.91
-           oj ███████████▏ 2.80
-     fastjson ████████▌ 2.14
-     jsoniter ██████▏ 1.54
-         json ▓▓▓▓ 1.00
-        goccy █▋ 0.43
-     simdjson >>> not supported <<<
-   jsonparser >>> not supported <<<
-        json2 >>> not supported <<<
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-Validate string
-         json.Validate               10426 ns/op            0 B/op            0 allocs/op
-        json2 >>> not supported <<<
-           oj >>> not supported <<<
-     fastjson.Validate                5246 ns/op         4096 B/op            1 allocs/op
-     jsoniter >>> not supported <<<
-   jsonparser >>> not supported <<<
-        goccy >>> not supported <<<
-      segment >>> not supported <<<
-     simdjson >>> not supported <<<
-        gjson.Validate                3887 ns/op         4096 B/op            1 allocs/op
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-        gjson ██████████▋ 2.68
-     fastjson ███████▉ 1.99
-         json ▓▓▓▓ 1.00
-     simdjson >>> not supported <<<
-      gjson-v >>> not supported <<<
-   jsonparser >>> not supported <<<
-        goccy >>> not supported <<<
-      segment >>> not supported <<<
-           oj >>> not supported <<<
-        json2 >>> not supported <<<
-     jsoniter >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
 Unmarshal single record (2kb), read few keys generically
-         json.Unmarshal              27461 ns/op        12488 B/op           21 allocs/op
+         json.Unmarshal              27593 ns/op        12488 B/op           21 allocs/op
         json2 >>> not supported <<<
            oj >>> not supported <<<
-     fastjson.Unmarshal               8197 ns/op        12034 B/op            7 allocs/op
+     fastjson.Unmarshal               8280 ns/op        12034 B/op            7 allocs/op
      jsoniter >>> not supported <<<
-   jsonparser.Unmarshal               8014 ns/op        12147 B/op           13 allocs/op
+   jsonparser.Unmarshal               8140 ns/op        12208 B/op           17 allocs/op
         goccy >>> not supported <<<
       segment >>> not supported <<<
      simdjson >>> not supported <<<
-        gjson.Unmarshal               9311 ns/op        16368 B/op            9 allocs/op
-      gjson-v.Unmarshal              12779 ns/op        16368 B/op            9 allocs/op
+        gjson.Unmarshal               9418 ns/op        16368 B/op            9 allocs/op
+      gjson-v.Unmarshal              12878 ns/op        16368 B/op            9 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
         codec >>> not supported <<<
-          jin.Unmarshal               7798 ns/op        12040 B/op            8 allocs/op
-        jason.Unmarshal              51099 ns/op        55997 B/op          495 allocs/op
+          jin.Unmarshal               7975 ns/op        12344 B/op           10 allocs/op
+        jason.Unmarshal              51373 ns/op        55997 B/op          495 allocs/op
         djson >>> not supported <<<
        ffjson >>> not supported <<<
      easyjson >>> not supported <<<
 
-          jin ██████████████  3.52
-   jsonparser █████████████▋ 3.43
-     fastjson █████████████▍ 3.35
-        gjson ███████████▊ 2.95
-      gjson-v ████████▌ 2.15
+          jin █████████████▊ 3.46
+   jsonparser █████████████▌ 3.39
+     fastjson █████████████▎ 3.33
+        gjson ███████████▋ 2.93
+      gjson-v ████████▌ 2.14
          json ▓▓▓▓ 1.00
         jason ██▏ 0.54
      simdjson >>> not supported <<<
@@ -760,275 +678,80 @@ Unmarshal single record (2kb), read few keys generically
      easyjson >>> not supported <<<
 
 Unmarshal single record (2kb), read few keys into struct
-         json.Unmarshal              27485 ns/op        12488 B/op           21 allocs/op
-        json2.Unmarshal               8911 ns/op          128 B/op            6 allocs/op
+         json.Unmarshal              27624 ns/op        12488 B/op           21 allocs/op
+        json2.Unmarshal               8930 ns/op          128 B/op            6 allocs/op
            oj >>> not supported <<<
-     fastjson >>> not supported <<<
-     jsoniter.Unmarshal              12302 ns/op        14063 B/op           84 allocs/op
-   jsonparser >>> not supported <<<
-        goccy.Unmarshal               8980 ns/op        16171 B/op            7 allocs/op
-      segment.Unmarshal               9547 ns/op        12064 B/op           12 allocs/op
+     fastjson.Unmarshal               8378 ns/op        12080 B/op           10 allocs/op
+     jsoniter.Unmarshal              12294 ns/op        14063 B/op           84 allocs/op
+   jsonparser.Unmarshal               8340 ns/op        12208 B/op           17 allocs/op
+        goccy.Unmarshal               9019 ns/op        16171 B/op            7 allocs/op
+      segment.Unmarshal               9609 ns/op        12064 B/op           12 allocs/op
      simdjson >>> not supported <<<
-        gjson >>> not supported <<<
-      gjson-v >>> not supported <<<
+        gjson.Unmarshal               9598 ns/op        16400 B/op           10 allocs/op
+      gjson-v.Unmarshal              13110 ns/op        16400 B/op           10 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Unmarshal              10529 ns/op        13240 B/op           15 allocs/op
-          jin >>> not supported <<<
-        jason >>> not supported <<<
+        codec.Unmarshal              10584 ns/op        13240 B/op           15 allocs/op
+          jin.Unmarshal               8226 ns/op        12344 B/op           10 allocs/op
+        jason.Unmarshal              52616 ns/op        55997 B/op          495 allocs/op
         djson >>> not supported <<<
-       ffjson.Unmarshal              21973 ns/op        14206 B/op           36 allocs/op
-     easyjson.Unmarshal              20963 ns/op        12326 B/op           16 allocs/op
+       ffjson.Unmarshal              22038 ns/op        14206 B/op           36 allocs/op
+     easyjson.Unmarshal              21021 ns/op        12326 B/op           16 allocs/op
 
-        json2 ████████████▎ 3.08
-        goccy ████████████▏ 3.06
-      segment ███████████▌ 2.88
+        * jin █████████████▍ 3.36
+ * jsonparser █████████████▏ 3.31
+   * fastjson █████████████▏ 3.30
+        json2 ████████████▎ 3.09
+        goccy ████████████▎ 3.06
+      * gjson ███████████▌ 2.88
+      segment ███████████▍ 2.87
         codec ██████████▍ 2.61
-     jsoniter ████████▉ 2.23
-     easyjson █████▏ 1.31
+     jsoniter ████████▉ 2.25
+    * gjson-v ████████▍ 2.11
+     easyjson █████▎ 1.31
        ffjson █████  1.25
          json ▓▓▓▓ 1.00
+      * jason ██  0.53
      simdjson >>> not supported <<<
-        gjson >>> not supported <<<
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-   jsonparser >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
         djson >>> not supported <<<
-     fastjson >>> not supported <<<
+        sonic >>> not supported <<<
            oj >>> not supported <<<
 
 Unmarshal single record (2kb), read all keys generically
-         json.Unmarshal              36170 ns/op        29776 B/op          340 allocs/op
-        json2.Unmarshal              23645 ns/op        15545 B/op          295 allocs/op
-           oj.Unmarshal              23141 ns/op        19300 B/op          465 allocs/op
-     fastjson.Unmarshal              13301 ns/op        13608 B/op           73 allocs/op
-     jsoniter.Unmarshal              27625 ns/op        31697 B/op          457 allocs/op
-   jsonparser.Unmarshal              20460 ns/op        14528 B/op          135 allocs/op
-        goccy.Unmarshal              25519 ns/op        34556 B/op          398 allocs/op
-      segment.Unmarshal              62445 ns/op       173242 B/op          475 allocs/op
-panic: runtime error: invalid memory address or nil pointer dereference
-[signal SIGSEGV: segmentation violation code=0x2 addr=0x0 pc=0x10519945c]
-
-goroutine 88 [running]:
-github.com/minio/simdjson-go.(*ParsedJson).ForEach(0x14000172788?, 0x1053719e8)
-	/Users/anantn/go/pkg/mod/github.com/minio/simdjson-go@v0.4.5/parsed_json.go:126 +0x3c
-main.simdjsonFile1All(0x14000172788)
-	/Users/anantn/Code/compare-go-json/simdjson.go:52 +0x1e0
-testing.(*B).runN(0x14000172788, 0x1)
-	/usr/local/go/src/testing/benchmark.go:193 +0x130
-testing.(*B).run1.func1()
-	/usr/local/go/src/testing/benchmark.go:215 +0x50
-created by testing.(*B).run1 in goroutine 1
-	/usr/local/go/src/testing/benchmark.go:208 +0x90
-
-compare-go-json on  master via 🐹 v1.22.1 took 55s 
-❯ code .
-
-compare-go-json on  master via 🐹 v1.22.1 
-❯ go build ./... && ./go-json-benchmarks
-WARNING: sonic only supports Go1.16~1.22 && CPU amd64, but your environment is not suitable
-
-Validate []byte
-         json.Validate               10462 ns/op            0 B/op            0 allocs/op
-        json2 >>> not supported <<<
-           oj.Validate                3737 ns/op            0 B/op            0 allocs/op
-     fastjson.Validate                4866 ns/op            0 B/op            0 allocs/op
-     jsoniter.Validate                6663 ns/op         2184 B/op          100 allocs/op
-   jsonparser >>> not supported <<<
-        goccy.Validate               23178 ns/op        27601 B/op          463 allocs/op
-      segment.Validate                3553 ns/op            0 B/op            0 allocs/op
+         json.Unmarshal              36101 ns/op        29778 B/op          340 allocs/op
+        json2.Unmarshal              23528 ns/op        15546 B/op          295 allocs/op
+           oj.Unmarshal              23418 ns/op        19299 B/op          465 allocs/op
+     fastjson.Unmarshal              13344 ns/op        13608 B/op           73 allocs/op
+     jsoniter.Unmarshal              27732 ns/op        31696 B/op          457 allocs/op
+   jsonparser.Unmarshal              20386 ns/op        14528 B/op          135 allocs/op
+        goccy.Unmarshal              25625 ns/op        34556 B/op          398 allocs/op
+      segment.Unmarshal              64595 ns/op       173242 B/op          475 allocs/op
      simdjson >>> not supported <<<
-        gjson.Validate                3519 ns/op            0 B/op            0 allocs/op
-      gjson-v >>> not supported <<<
+        gjson.Unmarshal              18818 ns/op        18336 B/op           76 allocs/op
+      gjson-v.Unmarshal              22306 ns/op        18336 B/op           76 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin >>> not supported <<<
+        codec.Unmarshal              37099 ns/op        19456 B/op          435 allocs/op
+          jin.Unmarshal              28490 ns/op        25344 B/op          435 allocs/op
         jason >>> not supported <<<
-        djson >>> not supported <<<
+        djson.Unmarshal              20665 ns/op        32169 B/op          183 allocs/op
        ffjson >>> not supported <<<
      easyjson >>> not supported <<<
 
-        gjson ███████████▉ 2.97
-      segment ███████████▊ 2.94
-           oj ███████████▏ 2.80
-     fastjson ████████▌ 2.15
-     jsoniter ██████▎ 1.57
+     fastjson ██████████▊ 2.71
+        gjson ███████▋ 1.92
+   jsonparser ███████  1.77
+        djson ██████▉ 1.75
+      gjson-v ██████▍ 1.62
+           oj ██████▏ 1.54
+        json2 ██████▏ 1.53
+        goccy █████▋ 1.41
+     jsoniter █████▏ 1.30
+          jin █████  1.27
          json ▓▓▓▓ 1.00
-        goccy █▊ 0.45
-     simdjson >>> not supported <<<
-   jsonparser >>> not supported <<<
-        json2 >>> not supported <<<
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-Validate string
-         json.Validate               10425 ns/op            0 B/op            0 allocs/op
-        json2 >>> not supported <<<
-           oj >>> not supported <<<
-     fastjson.Validate                5234 ns/op         4096 B/op            1 allocs/op
-     jsoniter >>> not supported <<<
-   jsonparser >>> not supported <<<
-        goccy >>> not supported <<<
-      segment >>> not supported <<<
-     simdjson >>> not supported <<<
-        gjson.Validate                3885 ns/op         4096 B/op            1 allocs/op
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-        gjson ██████████▋ 2.68
-     fastjson ███████▉ 1.99
-         json ▓▓▓▓ 1.00
-     simdjson >>> not supported <<<
-      gjson-v >>> not supported <<<
-   jsonparser >>> not supported <<<
-        goccy >>> not supported <<<
-      segment >>> not supported <<<
-           oj >>> not supported <<<
-        json2 >>> not supported <<<
-     jsoniter >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-Unmarshal single record (2kb), read few keys generically
-         json.Unmarshal              27550 ns/op        12488 B/op           21 allocs/op
-        json2 >>> not supported <<<
-           oj >>> not supported <<<
-     fastjson.Unmarshal               8240 ns/op        12034 B/op            7 allocs/op
-     jsoniter >>> not supported <<<
-   jsonparser.Unmarshal               8049 ns/op        12147 B/op           13 allocs/op
-        goccy >>> not supported <<<
-      segment >>> not supported <<<
-     simdjson >>> not supported <<<
-        gjson.Unmarshal               9373 ns/op        16368 B/op            9 allocs/op
-      gjson-v.Unmarshal              12839 ns/op        16368 B/op            9 allocs/op
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-          jin.Unmarshal               7919 ns/op        12040 B/op            8 allocs/op
-        jason.Unmarshal              51388 ns/op        55998 B/op          495 allocs/op
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-          jin █████████████▉ 3.48
-   jsonparser █████████████▋ 3.42
-     fastjson █████████████▎ 3.34
-        gjson ███████████▊ 2.94
-      gjson-v ████████▌ 2.15
-         json ▓▓▓▓ 1.00
-        jason ██▏ 0.54
-     simdjson >>> not supported <<<
-      segment >>> not supported <<<
-        goccy >>> not supported <<<
-     jsoniter >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec >>> not supported <<<
-           oj >>> not supported <<<
-        json2 >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-Unmarshal single record (2kb), read few keys into struct
-         json.Unmarshal              27479 ns/op        12488 B/op           21 allocs/op
-        json2.Unmarshal               8879 ns/op          128 B/op            6 allocs/op
-           oj >>> not supported <<<
-     fastjson >>> not supported <<<
-     jsoniter.Unmarshal              12310 ns/op        14063 B/op           84 allocs/op
-   jsonparser >>> not supported <<<
-        goccy.Unmarshal               9010 ns/op        16171 B/op            7 allocs/op
-      segment.Unmarshal               9640 ns/op        12064 B/op           12 allocs/op
-     simdjson >>> not supported <<<
-        gjson >>> not supported <<<
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec.Unmarshal              10552 ns/op        13240 B/op           15 allocs/op
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-       ffjson.Unmarshal              21894 ns/op        14206 B/op           36 allocs/op
-     easyjson.Unmarshal              20998 ns/op        12326 B/op           16 allocs/op
-
-        json2 ████████████▍ 3.09
-        goccy ████████████▏ 3.05
-      segment ███████████▍ 2.85
-        codec ██████████▍ 2.60
-     jsoniter ████████▉ 2.23
-     easyjson █████▏ 1.31
-       ffjson █████  1.26
-         json ▓▓▓▓ 1.00
-     simdjson >>> not supported <<<
-        gjson >>> not supported <<<
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-   jsonparser >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
-        djson >>> not supported <<<
-     fastjson >>> not supported <<<
-           oj >>> not supported <<<
-
-Unmarshal single record (2kb), read all keys generically
-         json.Unmarshal              36293 ns/op        29776 B/op          340 allocs/op
-        json2.Unmarshal              23583 ns/op        15545 B/op          295 allocs/op
-           oj.Unmarshal              23403 ns/op        19301 B/op          465 allocs/op
-     fastjson.Unmarshal              13352 ns/op        13608 B/op           73 allocs/op
-     jsoniter.Unmarshal              27788 ns/op        31698 B/op          457 allocs/op
-   jsonparser.Unmarshal              20160 ns/op        14528 B/op          135 allocs/op
-        goccy.Unmarshal              25621 ns/op        34555 B/op          398 allocs/op
-      segment.Unmarshal              63477 ns/op       173241 B/op          475 allocs/op
-     simdjson >>> not supported <<<
-        gjson.Unmarshal              18841 ns/op        18336 B/op           76 allocs/op
-      gjson-v.Unmarshal              22323 ns/op        18336 B/op           76 allocs/op
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        codec.Unmarshal              37157 ns/op        19456 B/op          435 allocs/op
-          jin.Unmarshal              28743 ns/op        25344 B/op          435 allocs/op
-        jason >>> not supported <<<
-        djson.Unmarshal              20707 ns/op        32167 B/op          183 allocs/op
-       ffjson >>> not supported <<<
-     easyjson >>> not supported <<<
-
-     fastjson ██████████▊ 2.72
-        gjson ███████▋ 1.93
-   jsonparser ███████▏ 1.80
-        djson ███████  1.75
-      gjson-v ██████▌ 1.63
-           oj ██████▏ 1.55
-        json2 ██████▏ 1.54
-        goccy █████▋ 1.42
-     jsoniter █████▏ 1.31
-          jin █████  1.26
-         json ▓▓▓▓ 1.00
-        codec ███▉ 0.98
-      segment ██▎ 0.57
+        codec ███▉ 0.97
+      segment ██▏ 0.56
      simdjson >>> not supported <<<
       sonic-v >>> not supported <<<
         jason >>> not supported <<<
@@ -1037,34 +760,34 @@ Unmarshal single record (2kb), read all keys generically
      easyjson >>> not supported <<<
 
 Unmarshal single record (2kb), read all keys into struct
-         json.Unmarshal              33099 ns/op        14608 B/op           80 allocs/op
-        json2.Unmarshal              14032 ns/op         3106 B/op           35 allocs/op
-           oj.Unmarshal              26592 ns/op         9340 B/op          453 allocs/op
+         json.Unmarshal              32981 ns/op        14608 B/op           80 allocs/op
+        json2.Unmarshal              14301 ns/op         3106 B/op           35 allocs/op
+           oj.Unmarshal              26809 ns/op         9340 B/op          453 allocs/op
      fastjson >>> not supported <<<
-     jsoniter.Unmarshal              13536 ns/op        14392 B/op           77 allocs/op
+     jsoniter.Unmarshal              13259 ns/op        14392 B/op           77 allocs/op
    jsonparser >>> not supported <<<
-        goccy.Unmarshal              11101 ns/op        16288 B/op            7 allocs/op
-      segment.Unmarshal              15112 ns/op        13680 B/op           73 allocs/op
+        goccy.Unmarshal              11181 ns/op        16289 B/op            7 allocs/op
+      segment.Unmarshal              15313 ns/op        13680 B/op           73 allocs/op
      simdjson >>> not supported <<<
         gjson >>> not supported <<<
       gjson-v >>> not supported <<<
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Unmarshal              15330 ns/op        14536 B/op           72 allocs/op
+        codec.Unmarshal              15513 ns/op        14536 B/op           72 allocs/op
           jin >>> not supported <<<
         jason >>> not supported <<<
         djson >>> not supported <<<
-       ffjson.Unmarshal              18800 ns/op        16820 B/op          113 allocs/op
-     easyjson.Unmarshal              16354 ns/op        15888 B/op           94 allocs/op
+       ffjson.Unmarshal              18798 ns/op        16820 B/op          113 allocs/op
+     easyjson.Unmarshal              16317 ns/op        15888 B/op           94 allocs/op
 
-        goccy ███████████▉ 2.98
-     jsoniter █████████▊ 2.45
-        json2 █████████▍ 2.36
-      segment ████████▊ 2.19
-        codec ████████▋ 2.16
+        goccy ███████████▊ 2.95
+     jsoniter █████████▉ 2.49
+        json2 █████████▏ 2.31
+      segment ████████▌ 2.15
+        codec ████████▌ 2.13
      easyjson ████████  2.02
-       ffjson ███████  1.76
-           oj ████▉ 1.24
+       ffjson ███████  1.75
+           oj ████▉ 1.23
          json ▓▓▓▓ 1.00
      simdjson >>> not supported <<<
       gjson-v >>> not supported <<<
@@ -1078,33 +801,33 @@ Unmarshal single record (2kb), read all keys into struct
      fastjson >>> not supported <<<
 
 Unmarshal many records (2kb each) from small file (100MB), read few keys generically
-         json.Unmarshal          663396479 ns/op     21756096 B/op       394053 allocs/op
+         json.Unmarshal          664894208 ns/op     21756032 B/op       394052 allocs/op
         json2 >>> not supported <<<
            oj >>> not supported <<<
-     fastjson.Unmarshal          126024989 ns/op      2537813 B/op        39513 allocs/op
+     fastjson.Unmarshal          129191500 ns/op      2537837 B/op        39514 allocs/op
      jsoniter >>> not supported <<<
-   jsonparser.Unmarshal           87215115 ns/op      4614347 B/op       177229 allocs/op
+   jsonparser.Unmarshal           89898131 ns/op      4614337 B/op       177229 allocs/op
         goccy >>> not supported <<<
       segment >>> not supported <<<
      simdjson >>> not supported <<<
-        gjson.Unmarshal          122017069 ns/op    105925440 B/op        39413 allocs/op
-      gjson-v.Unmarshal          235885208 ns/op    105925177 B/op        39410 allocs/op
+        gjson.Unmarshal          124166166 ns/op    105925557 B/op        39414 allocs/op
+      gjson-v.Unmarshal          239335091 ns/op    105925216 B/op        39411 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
         codec >>> not supported <<<
-          jin.Unmarshal           95803284 ns/op      2652133 B/op        78811 allocs/op
-        jason.Unmarshal         1343679500 ns/op   1082892592 B/op     16167067 allocs/op
+          jin.Unmarshal           98072979 ns/op      2652130 B/op        78811 allocs/op
+        jason.Unmarshal         1343083834 ns/op   1082925056 B/op     16167184 allocs/op
         djson >>> not supported <<<
        ffjson >>> not supported <<<
      easyjson >>> not supported <<<
 
-   jsonparser ██████████████████████████████▍ 7.61
-          jin ███████████████████████████▋ 6.92
-        gjson █████████████████████▋ 5.44
-     fastjson █████████████████████  5.26
-      gjson-v ███████████▏ 2.81
+   jsonparser █████████████████████████████▌ 7.40
+          jin ███████████████████████████  6.78
+        gjson █████████████████████▍ 5.35
+     fastjson ████████████████████▌ 5.15
+      gjson-v ███████████  2.78
          json ▓▓▓▓ 1.00
-        jason █▉ 0.49
+        jason █▉ 0.50
      simdjson >>> not supported <<<
       segment >>> not supported <<<
         goccy >>> not supported <<<
@@ -1119,79 +842,79 @@ Unmarshal many records (2kb each) from small file (100MB), read few keys generic
      easyjson >>> not supported <<<
 
 Unmarshal many records (2kb each) from small file (100MB), read few keys into struct
-         json.Unmarshal          662870500 ns/op     21755744 B/op       394052 allocs/op
-        json2.Unmarshal          253062437 ns/op        16410 B/op           67 allocs/op
-           oj.Unmarshal          669727062 ns/op    246953388 B/op     15880755 allocs/op
-     fastjson >>> not supported <<<
-     jsoniter.Unmarshal          285867979 ns/op     89442694 B/op      3979980 allocs/op
-   jsonparser >>> not supported <<<
-        goccy.Unmarshal          125449421 ns/op    106045892 B/op        39739 allocs/op
-      segment.Unmarshal          181779312 ns/op      2526037 B/op        39406 allocs/op
+         json.Unmarshal          664172041 ns/op     21755760 B/op       394052 allocs/op
+        json2.Unmarshal          255247364 ns/op        16410 B/op           67 allocs/op
+           oj.Unmarshal          676079104 ns/op    246953896 B/op     15880757 allocs/op
+     fastjson.Unmarshal          127984198 ns/op      2537825 B/op        39513 allocs/op
+     jsoniter.Unmarshal          286331823 ns/op     89443200 B/op      3979982 allocs/op
+   jsonparser.Unmarshal           88943012 ns/op      4614339 B/op       177229 allocs/op
+        goccy.Unmarshal          127639843 ns/op    106045457 B/op        39744 allocs/op
+      segment.Unmarshal          185692229 ns/op      2526037 B/op        39406 allocs/op
      simdjson >>> not supported <<<
-        gjson >>> not supported <<<
-      gjson-v >>> not supported <<<
+        gjson.Unmarshal          124225893 ns/op    105925706 B/op        39416 allocs/op
+      gjson-v.Unmarshal          237990391 ns/op    105925331 B/op        39412 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Unmarshal          170802631 ns/op     48866458 B/op       157622 allocs/op
-          jin >>> not supported <<<
-        jason >>> not supported <<<
+        codec.Unmarshal          173319819 ns/op     48866474 B/op       157623 allocs/op
+          jin.Unmarshal           98280399 ns/op      2652145 B/op        78811 allocs/op
+        jason.Unmarshal         1346599667 ns/op   1082885904 B/op     16167057 allocs/op
         djson >>> not supported <<<
-       ffjson.Unmarshal          387229111 ns/op     67899648 B/op       591339 allocs/op
-     easyjson.Unmarshal          531779021 ns/op      2527752 B/op        39414 allocs/op
+       ffjson.Unmarshal          392091208 ns/op     67900330 B/op       591344 allocs/op
+     easyjson.Unmarshal          535095187 ns/op      2527752 B/op        39416 allocs/op
 
-        goccy █████████████████████▏ 5.28
-        codec ███████████████▌ 3.88
-      segment ██████████████▌ 3.65
-        json2 ██████████▍ 2.62
+ * jsonparser █████████████████████████████▊ 7.47
+        * jin ███████████████████████████  6.76
+      * gjson █████████████████████▍ 5.35
+        goccy ████████████████████▊ 5.20
+   * fastjson ████████████████████▊ 5.19
+        codec ███████████████▎ 3.83
+      segment ██████████████▎ 3.58
+    * gjson-v ███████████▏ 2.79
+        json2 ██████████▍ 2.60
      jsoniter █████████▎ 2.32
-       ffjson ██████▊ 1.71
-     easyjson ████▉ 1.25
+       ffjson ██████▊ 1.69
+     easyjson ████▉ 1.24
          json ▓▓▓▓ 1.00
-           oj ███▉ 0.99
+           oj ███▉ 0.98
+      * jason █▉ 0.49
      simdjson >>> not supported <<<
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
-      sonic-v >>> not supported <<<
-        gjson >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
         djson >>> not supported <<<
-   jsonparser >>> not supported <<<
-     fastjson >>> not supported <<<
+      sonic-v >>> not supported <<<
+        sonic >>> not supported <<<
 
 Unmarshal many records (2kb each) from small file (100MB), read all keys generically
-         json.Unmarshal         1157970375 ns/op    743912176 B/op     14315048 allocs/op
-        json2.Unmarshal          949824666 ns/op    693397368 B/op     11939627 allocs/op
-           oj.Unmarshal         1157516917 ns/op    809306824 B/op     19911292 allocs/op
-     fastjson.Unmarshal          364131194 ns/op     66551413 B/op      2876854 allocs/op
-     jsoniter.Unmarshal          990867583 ns/op    819520936 B/op     19202037 allocs/op
-   jsonparser.Unmarshal          639996646 ns/op    105469824 B/op      5437894 allocs/op
-        goccy.Unmarshal          897758375 ns/op    877665964 B/op     16802547 allocs/op
-      segment.Unmarshal         3014437000 ns/op   6770606656 B/op     19978945 allocs/op
+         json.Unmarshal         1151385209 ns/op    743878576 B/op     14314939 allocs/op
+        json2.Unmarshal          946216771 ns/op    693414512 B/op     11939686 allocs/op
+           oj.Unmarshal         1169068583 ns/op    809287432 B/op     19911234 allocs/op
+     fastjson.Unmarshal          366834472 ns/op     66551472 B/op      2876854 allocs/op
+     jsoniter.Unmarshal          988414270 ns/op    819532340 B/op     19202085 allocs/op
+   jsonparser.Unmarshal          643740292 ns/op    105469680 B/op      5437892 allocs/op
+        goccy.Unmarshal          893365020 ns/op    877667784 B/op     16802529 allocs/op
+      segment.Unmarshal         3024869083 ns/op   6770606720 B/op     19978959 allocs/op
      simdjson >>> not supported <<<
-        gjson.Unmarshal          641942229 ns/op    196084576 B/op      2994787 allocs/op
-      gjson-v.Unmarshal          778361166 ns/op    196084632 B/op      2994789 allocs/op
+        gjson.Unmarshal          627679292 ns/op    196084440 B/op      2994787 allocs/op
+      gjson-v.Unmarshal          744356500 ns/op    196084424 B/op      2994787 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Unmarshal         1434169583 ns/op    313138064 B/op     18323511 allocs/op
-          jin.Unmarshal         1147027459 ns/op    563339816 B/op     18165734 allocs/op
+        codec.Unmarshal         1400056875 ns/op    313137696 B/op     18323507 allocs/op
+          jin.Unmarshal         1114297417 ns/op    563338952 B/op     18165724 allocs/op
         jason >>> not supported <<<
-        djson.Unmarshal          647903291 ns/op    770795888 B/op      7537422 allocs/op
+        djson.Unmarshal          646424062 ns/op    770805720 B/op      7537464 allocs/op
        ffjson >>> not supported <<<
      easyjson >>> not supported <<<
 
-     fastjson ████████████▋ 3.18
-   jsonparser ███████▏ 1.81
-        gjson ███████▏ 1.80
-        djson ███████▏ 1.79
-      gjson-v █████▉ 1.49
+     fastjson ████████████▌ 3.14
+        gjson ███████▎ 1.83
+   jsonparser ███████▏ 1.79
+        djson ███████  1.78
+      gjson-v ██████▏ 1.55
         goccy █████▏ 1.29
-        json2 ████▉ 1.22
-     jsoniter ████▋ 1.17
-          jin ████  1.01
-           oj ████  1.00
+        json2 ████▊ 1.22
+     jsoniter ████▋ 1.16
+          jin ████▏ 1.03
          json ▓▓▓▓ 1.00
-        codec ███▏ 0.81
+           oj ███▉ 0.98
+        codec ███▎ 0.82
       segment █▌ 0.38
      simdjson >>> not supported <<<
       sonic-v >>> not supported <<<
@@ -1201,33 +924,33 @@ Unmarshal many records (2kb each) from small file (100MB), read all keys generic
      easyjson >>> not supported <<<
 
 Unmarshal many records (2kb each) from small file (100MB), read all keys into struct
-         json.Unmarshal          933990583 ns/op    111143072 B/op      3113020 allocs/op
-        json2.Unmarshal          527895917 ns/op    129790324 B/op      1792490 allocs/op
+         json.Unmarshal          936409687 ns/op    111143384 B/op      3113021 allocs/op
+        json2.Unmarshal          531664208 ns/op    129790196 B/op      1792489 allocs/op
            oj >>> not supported <<<
      fastjson >>> not supported <<<
-     jsoniter.Unmarshal          306623958 ns/op     97329814 B/op      2955472 allocs/op
+     jsoniter.Unmarshal          302310635 ns/op     97329280 B/op      2955470 allocs/op
    jsonparser >>> not supported <<<
-        goccy.Unmarshal          210295891 ns/op    107153896 B/op        42818 allocs/op
-      segment.Unmarshal          402844430 ns/op     69133245 B/op      2797769 allocs/op
+        goccy.Unmarshal          210571950 ns/op    107169392 B/op        43110 allocs/op
+      segment.Unmarshal          409084263 ns/op     69133181 B/op      2797769 allocs/op
      simdjson >>> not supported <<<
         gjson >>> not supported <<<
       gjson-v >>> not supported <<<
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Unmarshal          393172819 ns/op    102290645 B/op      2718959 allocs/op
+        codec.Unmarshal          396267569 ns/op    102290640 B/op      2718959 allocs/op
           jin >>> not supported <<<
         jason >>> not supported <<<
         djson >>> not supported <<<
-       ffjson.Unmarshal          557960687 ns/op    218509932 B/op      4690382 allocs/op
-     easyjson.Unmarshal          425623097 ns/op    170814813 B/op      3822747 allocs/op
+       ffjson.Unmarshal          555748271 ns/op    218501800 B/op      4690357 allocs/op
+     easyjson.Unmarshal          425918889 ns/op    170812645 B/op      3822719 allocs/op
 
-        goccy █████████████████▊ 4.44
-     jsoniter ████████████▏ 3.05
-        codec █████████▌ 2.38
-      segment █████████▎ 2.32
-     easyjson ████████▊ 2.19
-        json2 ███████  1.77
-       ffjson ██████▋ 1.67
+        goccy █████████████████▊ 4.45
+     jsoniter ████████████▍ 3.10
+        codec █████████▍ 2.36
+      segment █████████▏ 2.29
+     easyjson ████████▊ 2.20
+        json2 ███████  1.76
+       ffjson ██████▋ 1.68
          json ▓▓▓▓ 1.00
      simdjson >>> not supported <<<
         gjson >>> not supported <<<
@@ -1242,30 +965,30 @@ Unmarshal many records (2kb each) from small file (100MB), read all keys into st
            oj >>> not supported <<<
 
 Unmarshal many records (25kb each) from semi-large file (5GB), read few keys generically
-         json.Unmarshal        31256352459 ns/op    116289888 B/op      2105581 allocs/op
+         json.Unmarshal        31301040958 ns/op    116289696 B/op      2105580 allocs/op
         json2 >>> not supported <<<
            oj >>> not supported <<<
-     fastjson.Unmarshal         5306753792 ns/op     14548640 B/op       218834 allocs/op
+     fastjson.Unmarshal         5292408125 ns/op     14548256 B/op       218830 allocs/op
      jsoniter >>> not supported <<<
-   jsonparser.Unmarshal         2907524375 ns/op     24696736 B/op       947485 allocs/op
+   jsonparser.Unmarshal         2914637334 ns/op     24696800 B/op       947485 allocs/op
         goccy >>> not supported <<<
       segment >>> not supported <<<
      simdjson >>> not supported <<<
-        gjson.Unmarshal         4791219583 ns/op   5740738176 B/op       211089 allocs/op
-      gjson-v.Unmarshal        10465913625 ns/op   5740728480 B/op       210956 allocs/op
+        gjson.Unmarshal         4801432291 ns/op   5740740480 B/op       211113 allocs/op
+      gjson-v.Unmarshal        10462319709 ns/op   5740724640 B/op       210948 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
         codec >>> not supported <<<
-          jin.Unmarshal         3547572875 ns/op     14211056 B/op       421119 allocs/op
-        jason.Unmarshal        63233934791 ns/op  51092971856 B/op    711854429 allocs/op
+          jin.Unmarshal         3653586417 ns/op     14210960 B/op       421119 allocs/op
+        jason.Unmarshal        63338545375 ns/op  51093030944 B/op    711854828 allocs/op
         djson >>> not supported <<<
        ffjson >>> not supported <<<
      easyjson >>> not supported <<<
 
-   jsonparser ███████████████████████████████████████████  10.75
-          jin ███████████████████████████████████▏ 8.81
+   jsonparser ██████████████████████████████████████████▉ 10.74
+          jin ██████████████████████████████████▎ 8.57
         gjson ██████████████████████████  6.52
-     fastjson ███████████████████████▌ 5.89
+     fastjson ███████████████████████▋ 5.91
       gjson-v ███████████▉ 2.99
          json ▓▓▓▓ 1.00
         jason █▉ 0.49
@@ -1283,78 +1006,78 @@ Unmarshal many records (25kb each) from semi-large file (5GB), read few keys gen
      easyjson >>> not supported <<<
 
 Unmarshal many records (25kb each) from semi-large file (5GB), read few keys into struct
-         json.Unmarshal        31213790583 ns/op    116289600 B/op      2105580 allocs/op
-        json2.Unmarshal        12104046042 ns/op        17624 B/op           72 allocs/op
+         json.Unmarshal        31317242417 ns/op    116289552 B/op      2105577 allocs/op
+        json2.Unmarshal        12152636500 ns/op        17624 B/op           72 allocs/op
            oj >>> not supported <<<
-     fastjson >>> not supported <<<
-     jsoniter.Unmarshal        13603473209 ns/op   4644531120 B/op    210771942 allocs/op
-   jsonparser >>> not supported <<<
-        goccy.Unmarshal         5188465750 ns/op   5748746056 B/op       231824 allocs/op
-      segment.Unmarshal         7626735375 ns/op     13537216 B/op       210563 allocs/op
+     fastjson.Unmarshal         5469278000 ns/op     14548256 B/op       218830 allocs/op
+     jsoniter.Unmarshal        14016159167 ns/op   4644582472 B/op    210772098 allocs/op
+   jsonparser.Unmarshal         3011843625 ns/op     24696720 B/op       947485 allocs/op
+        goccy.Unmarshal         5389332875 ns/op   5748884664 B/op       231974 allocs/op
+      segment.Unmarshal         7908669250 ns/op     13537216 B/op       210563 allocs/op
      simdjson >>> not supported <<<
-        gjson >>> not supported <<<
-      gjson-v >>> not supported <<<
+        gjson.Unmarshal         5010077666 ns/op   5740739520 B/op       211103 allocs/op
+      gjson-v.Unmarshal        10811854167 ns/op   5740731456 B/op       211019 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Unmarshal         6482178875 ns/op    261153384 B/op       842246 allocs/op
-          jin >>> not supported <<<
-        jason >>> not supported <<<
+        codec.Unmarshal         6703905625 ns/op    261153192 B/op       842244 allocs/op
+          jin.Unmarshal         3705682666 ns/op     14211104 B/op       421120 allocs/op
+        jason.Unmarshal        64744879750 ns/op  51093577088 B/op    711856862 allocs/op
         djson >>> not supported <<<
-       ffjson.Unmarshal        16537171292 ns/op    362913888 B/op      3160013 allocs/op
-     easyjson.Unmarshal        26878690042 ns/op     13547936 B/op       210631 allocs/op
+       ffjson.Unmarshal        16835513291 ns/op    362928112 B/op      3160071 allocs/op
+     easyjson.Unmarshal        27184591250 ns/op     13548512 B/op       210629 allocs/op
 
-        goccy ████████████████████████  6.02
-        codec ███████████████████▎ 4.82
-      segment ████████████████▎ 4.09
+ * jsonparser █████████████████████████████████████████▌ 10.40
+        * jin █████████████████████████████████▊ 8.45
+      * gjson █████████████████████████  6.25
+        goccy ███████████████████████▏ 5.81
+   * fastjson ██████████████████████▉ 5.73
+        codec ██████████████████▋ 4.67
+      segment ███████████████▊ 3.96
+    * gjson-v ███████████▌ 2.90
         json2 ██████████▎ 2.58
-     jsoniter █████████▏ 2.29
-       ffjson ███████▌ 1.89
-     easyjson ████▋ 1.16
+     jsoniter ████████▉ 2.23
+       ffjson ███████▍ 1.86
+     easyjson ████▌ 1.15
          json ▓▓▓▓ 1.00
+      * jason █▉ 0.48
      simdjson >>> not supported <<<
-        gjson >>> not supported <<<
-      gjson-v >>> not supported <<<
-        sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-   jsonparser >>> not supported <<<
-          jin >>> not supported <<<
-        jason >>> not supported <<<
         djson >>> not supported <<<
-     fastjson >>> not supported <<<
+        sonic >>> not supported <<<
            oj >>> not supported <<<
 
 Unmarshal many records from (25kb each) semi-large file (5GB), read all keys generically
-         json.Unmarshal        59162200917 ns/op  37196790208 B/op    701326642 allocs/op
-        json2.Unmarshal        48371781417 ns/op  35262026584 B/op    579152682 allocs/op
-           oj.Unmarshal        62492061084 ns/op  40969488264 B/op    988134641 allocs/op
-     fastjson.Unmarshal        17905291041 ns/op   3343060096 B/op    142344995 allocs/op
-     jsoniter.Unmarshal        52463296250 ns/op  41776313344 B/op    960571419 allocs/op
-   jsonparser.Unmarshal        32124871375 ns/op   5277725704 B/op    273513675 allocs/op
-        goccy.Unmarshal        47378195500 ns/op  44837337656 B/op    833470674 allocs/op
-      segment.Unmarshal       146381703709 ns/op 341675898856 B/op    995540014 allocs/op
+         json.Unmarshal        59311769750 ns/op  37196911920 B/op    701327218 allocs/op
+        json2.Unmarshal        47479322666 ns/op  35261685712 B/op    579151551 allocs/op
+           oj.Unmarshal        63907148584 ns/op  40969089560 B/op    988133051 allocs/op
+     fastjson.Unmarshal        18188804041 ns/op   3343061760 B/op    142345014 allocs/op
+     jsoniter.Unmarshal        52841262000 ns/op  41776010648 B/op    960570620 allocs/op
+   jsonparser.Unmarshal        33000124292 ns/op   5277731400 B/op    273513719 allocs/op
+        goccy.Unmarshal        49823845416 ns/op  44836555536 B/op    833466654 allocs/op
+      segment.Unmarshal       149980700625 ns/op 341675772024 B/op    995538666 allocs/op
      simdjson >>> not supported <<<
-        gjson.Unmarshal        31415638125 ns/op  10406698784 B/op    146758700 allocs/op
-      gjson-v.Unmarshal        37213082084 ns/op  10406686896 B/op    146758588 allocs/op
+        gjson.Unmarshal        31562406958 ns/op  10406695968 B/op    146758665 allocs/op
+      gjson-v.Unmarshal        37402392459 ns/op  10406686592 B/op    146758590 allocs/op
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Unmarshal        69553223041 ns/op  13524897808 B/op    905187844 allocs/op
-          jin.Unmarshal        56425113875 ns/op  28244853656 B/op    910029005 allocs/op
+        codec.Unmarshal        69678185833 ns/op  13524891216 B/op    905187755 allocs/op
+          jin.Unmarshal        57280385250 ns/op  28244873848 B/op    910029136 allocs/op
         jason >>> not supported <<<
-        djson.Unmarshal        33990522333 ns/op  39791627456 B/op    375172643 allocs/op
+        djson.Unmarshal        34548678125 ns/op  39791614160 B/op    375172653 allocs/op
        ffjson >>> not supported <<<
      easyjson >>> not supported <<<
 
-     fastjson █████████████▏ 3.30
+     fastjson █████████████  3.26
         gjson ███████▌ 1.88
-   jsonparser ███████▎ 1.84
-        djson ██████▉ 1.74
+   jsonparser ███████▏ 1.80
+        djson ██████▊ 1.72
       gjson-v ██████▎ 1.59
-        goccy ████▉ 1.25
-        json2 ████▉ 1.22
-     jsoniter ████▌ 1.13
-          jin ████▏ 1.05
+        json2 ████▉ 1.25
+        goccy ████▊ 1.19
+     jsoniter ████▍ 1.12
+          jin ████▏ 1.04
          json ▓▓▓▓ 1.00
-           oj ███▊ 0.95
+           oj ███▋ 0.93
         codec ███▍ 0.85
       segment █▌ 0.40
      simdjson >>> not supported <<<
@@ -1365,33 +1088,33 @@ Unmarshal many records from (25kb each) semi-large file (5GB), read all keys gen
      easyjson >>> not supported <<<
 
 Unmarshal many records from (25kb each) semi-large file (5GB), read all keys into struct
-         json.Unmarshal        43829186083 ns/op   4426671440 B/op    137915338 allocs/op
-        json2.Unmarshal        27201680958 ns/op   6898796264 B/op     94203710 allocs/op
+         json.Unmarshal        45092887875 ns/op   4426671968 B/op    137915351 allocs/op
+        json2.Unmarshal        27475470625 ns/op   6898842040 B/op     94203776 allocs/op
            oj >>> not supported <<<
      fastjson >>> not supported <<<
-     jsoniter.Unmarshal        14564398292 ns/op   4989275008 B/op    150343002 allocs/op
+     jsoniter.Unmarshal        14504947750 ns/op   4989314664 B/op    150343123 allocs/op
    jsonparser >>> not supported <<<
-        goccy.Unmarshal         9151100916 ns/op   5821500096 B/op       434577 allocs/op
-      segment.Unmarshal        19519526583 ns/op   3474104424 B/op    141915804 allocs/op
+        goccy.Unmarshal         9322221333 ns/op   5821877552 B/op       439323 allocs/op
+      segment.Unmarshal        19876647041 ns/op   3474107224 B/op    141915831 allocs/op
      simdjson >>> not supported <<<
         gjson >>> not supported <<<
       gjson-v >>> not supported <<<
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Unmarshal        18220652125 ns/op   3045079632 B/op    133914646 allocs/op
+        codec.Unmarshal        18446697125 ns/op   3045082832 B/op    133914672 allocs/op
           jin >>> not supported <<<
         jason >>> not supported <<<
         djson >>> not supported <<<
-       ffjson.Unmarshal        24764420875 ns/op  10030680192 B/op    215459150 allocs/op
-     easyjson.Unmarshal        20962012875 ns/op   8935461448 B/op    198579608 allocs/op
+       ffjson.Unmarshal        24959078250 ns/op  10030816656 B/op    215458688 allocs/op
+     easyjson.Unmarshal        21510108417 ns/op   8935612424 B/op    198580351 allocs/op
 
-        goccy ███████████████████▏ 4.79
-     jsoniter ████████████  3.01
-        codec █████████▌ 2.41
-      segment ████████▉ 2.25
-     easyjson ████████▎ 2.09
-       ffjson ███████  1.77
-        json2 ██████▍ 1.61
+        goccy ███████████████████▎ 4.84
+     jsoniter ████████████▍ 3.11
+        codec █████████▊ 2.44
+      segment █████████  2.27
+     easyjson ████████▍ 2.10
+       ffjson ███████▏ 1.81
+        json2 ██████▌ 1.64
          json ▓▓▓▓ 1.00
      simdjson >>> not supported <<<
         gjson >>> not supported <<<
@@ -1406,38 +1129,38 @@ Unmarshal many records from (25kb each) semi-large file (5GB), read all keys int
            oj >>> not supported <<<
 
 Marshal custom data through an object builder
-         json.Marshal                 1268 ns/op          688 B/op           17 allocs/op
-        json2.Marshal                 1249 ns/op          424 B/op           10 allocs/op
-           oj.Builder                 1419 ns/op         1129 B/op           17 allocs/op
-     fastjson.Marshal                  865 ns/op          679 B/op            6 allocs/op
-     jsoniter.Marshal                  707 ns/op          432 B/op            7 allocs/op
+         json.Marshal                 1348 ns/op          688 B/op           17 allocs/op
+        json2.Marshal                 1313 ns/op          424 B/op           10 allocs/op
+           oj.Builder                 1485 ns/op         1129 B/op           17 allocs/op
+     fastjson.Marshal                  880 ns/op          679 B/op            6 allocs/op
+     jsoniter.Marshal                  721 ns/op          432 B/op            7 allocs/op
    jsonparser >>> not supported <<<
-        goccy.Marshal                  816 ns/op          416 B/op            2 allocs/op
-      segment.Marshal                  740 ns/op          176 B/op            1 allocs/op
+        goccy.Marshal                  845 ns/op          416 B/op            2 allocs/op
+      segment.Marshal                  769 ns/op          176 B/op            1 allocs/op
      simdjson >>> not supported <<<
-        gjson.Marshal                 2599 ns/op         3026 B/op           27 allocs/op
+        gjson.Marshal                 2721 ns/op         3026 B/op           27 allocs/op
       gjson-v >>> not supported <<<
         sonic >>> not supported <<<
       sonic-v >>> not supported <<<
-        codec.Marshal                  770 ns/op          969 B/op            0 allocs/op
-          jin.Marshal                 2307 ns/op         2546 B/op           56 allocs/op
+        codec.Marshal                  759 ns/op         1003 B/op            0 allocs/op
+          jin.Marshal                 2305 ns/op         2546 B/op           56 allocs/op
         jason >>> not supported <<<
         djson >>> not supported <<<
-       ffjson.Marshal                  207 ns/op          144 B/op            2 allocs/op
-     easyjson.Marshal                  185 ns/op          288 B/op            3 allocs/op
+       ffjson.Marshal                  212 ns/op          144 B/op            2 allocs/op
+     easyjson.Marshal                  189 ns/op          288 B/op            3 allocs/op
 
-     easyjson ███████████████████████████▍ 6.85
-       ffjson ████████████████████████▌ 6.13
-     jsoniter ███████▏ 1.79
-      segment ██████▊ 1.71
-        codec ██████▌ 1.65
-        goccy ██████▏ 1.55
-     fastjson █████▊ 1.47
-        json2 ████  1.02
+     easyjson ████████████████████████████▌ 7.13
+       ffjson █████████████████████████▍ 6.36
+     jsoniter ███████▍ 1.87
+        codec ███████  1.78
+      segment ███████  1.75
+        goccy ██████▍ 1.60
+     fastjson ██████▏ 1.53
+        json2 ████  1.03
          json ▓▓▓▓ 1.00
-           oj ███▌ 0.89
-          jin ██▏ 0.55
-        gjson █▉ 0.49
+           oj ███▋ 0.91
+          jin ██▎ 0.58
+        gjson █▉ 0.50
      simdjson >>> not supported <<<
       sonic-v >>> not supported <<<
         sonic >>> not supported <<<
@@ -1445,6 +1168,88 @@ Marshal custom data through an object builder
         djson >>> not supported <<<
       gjson-v >>> not supported <<<
    jsonparser >>> not supported <<<
+
+Validate []byte
+         json.Validate               10517 ns/op            0 B/op            0 allocs/op
+        json2 >>> not supported <<<
+           oj.Validate                3868 ns/op            0 B/op            0 allocs/op
+     fastjson.Validate                4949 ns/op            0 B/op            0 allocs/op
+     jsoniter.Validate                6944 ns/op         2185 B/op          100 allocs/op
+   jsonparser >>> not supported <<<
+        goccy.Validate               28429 ns/op        27616 B/op          463 allocs/op
+      segment.Validate                3625 ns/op            0 B/op            0 allocs/op
+     simdjson >>> not supported <<<
+        gjson.Validate                3584 ns/op            0 B/op            0 allocs/op
+      gjson-v >>> not supported <<<
+        sonic >>> not supported <<<
+      sonic-v >>> not supported <<<
+        codec >>> not supported <<<
+          jin >>> not supported <<<
+        jason >>> not supported <<<
+        djson >>> not supported <<<
+       ffjson >>> not supported <<<
+     easyjson >>> not supported <<<
+
+        gjson ███████████▋ 2.93
+      segment ███████████▌ 2.90
+           oj ██████████▉ 2.72
+     fastjson ████████▌ 2.13
+     jsoniter ██████  1.51
+         json ▓▓▓▓ 1.00
+        goccy █▍ 0.37
+     simdjson >>> not supported <<<
+   jsonparser >>> not supported <<<
+        json2 >>> not supported <<<
+      gjson-v >>> not supported <<<
+        sonic >>> not supported <<<
+      sonic-v >>> not supported <<<
+        codec >>> not supported <<<
+          jin >>> not supported <<<
+        jason >>> not supported <<<
+        djson >>> not supported <<<
+       ffjson >>> not supported <<<
+     easyjson >>> not supported <<<
+
+Validate string
+         json.Validate               10559 ns/op            0 B/op            0 allocs/op
+        json2 >>> not supported <<<
+           oj >>> not supported <<<
+     fastjson.Validate                5617 ns/op         4096 B/op            1 allocs/op
+     jsoniter >>> not supported <<<
+   jsonparser >>> not supported <<<
+        goccy >>> not supported <<<
+      segment >>> not supported <<<
+     simdjson >>> not supported <<<
+        gjson.Validate                4268 ns/op         4096 B/op            1 allocs/op
+      gjson-v >>> not supported <<<
+        sonic >>> not supported <<<
+      sonic-v >>> not supported <<<
+        codec >>> not supported <<<
+          jin >>> not supported <<<
+        jason >>> not supported <<<
+        djson >>> not supported <<<
+       ffjson >>> not supported <<<
+     easyjson >>> not supported <<<
+
+        gjson █████████▉ 2.47
+     fastjson ███████▌ 1.88
+         json ▓▓▓▓ 1.00
+     simdjson >>> not supported <<<
+      gjson-v >>> not supported <<<
+   jsonparser >>> not supported <<<
+        goccy >>> not supported <<<
+      segment >>> not supported <<<
+           oj >>> not supported <<<
+        json2 >>> not supported <<<
+     jsoniter >>> not supported <<<
+        sonic >>> not supported <<<
+      sonic-v >>> not supported <<<
+        codec >>> not supported <<<
+          jin >>> not supported <<<
+        jason >>> not supported <<<
+        djson >>> not supported <<<
+       ffjson >>> not supported <<<
+     easyjson >>> not supported <<<
 
  Higher values (longer bars) are better in all cases. The bar graph compares the
  parsing performance. The lighter colored bar is the reference, the go json

@@ -33,7 +33,7 @@ var easyjsonPkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			easyjsonFileManyAll(b, openLargeLogFile())
 		}},
-		"marshal-builder": {name: "Marshal", fun: easyjsonMarshalBuilder},
+		"marshal-builder": {name: "Marshal", fun: easyjsonMarshalBuilder, caveat: true},
 	},
 }
 

@@ -17,17 +17,28 @@ import (
 var jinPkg = pkg{
 	name: "jin",
 	calls: map[string]*call{
-		"single-few-keys": {name: "Unmarshal", fun: jinFile1Few},
+		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jinFile1Few(b, false)
+		}},
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jinFile1Few(b, true)
+		}, caveat: true},
 		"single-all-keys": {name: "Unmarshal", fun: jinFile1All},
 		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jinFileManyFew(b, smallTestFile())
+			jinFileManyFew(b, smallTestFile(), false)
 		}},
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jinFileManyFew(b, smallTestFile(), true)
+		}, caveat: true},
 		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			jinFileManyAll(b, smallTestFile())
 		}},
 		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jinFileManyFew(b, largeTestFile())
+			jinFileManyFew(b, largeTestFile(), false)
 		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jinFileManyFew(b, largeTestFile(), true)
+		}, caveat: true},
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			jinFileManyAll(b, largeTestFile())
 		}},
@@ -54,7 +65,7 @@ func jinMarshalBuilder(b *testing.B) {
 	}
 }
 
-func jinFile1Few(b *testing.B) {
+func jinFile1Few(b *testing.B, useStruct bool) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -62,14 +73,23 @@ func jinFile1Few(b *testing.B) {
 	defer func() { _ = f.Close() }()
 
 	b.ResetTimer()
+	var p = getEmptyPartialPatient()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
 		obj := jin.New(j)
 		strval, _ := obj.GetString("identifier", "0", "type", "coding", "0", "code")
-		arrval, _ := jin.Length(j, "name", "2", "given")
+		arrval, _ := obj.GetStringArray("name", "2", "given")
 		boolval, _ := obj.GetBool("deceasedBoolean")
-		err = checkPatient(strval, arrval, boolval)
+
+		if useStruct {
+			p.Identifier[0].Type.Coding[0].Code = strval
+			p.Name[0].Given = arrval
+			p.DeceasedBoolean = boolval
+			err = checkPatientStruct(p)
+		} else {
+			err = checkPatient(strval, len(arrval), boolval)
+		}
 		if err != nil {
 			benchErr = err
 			b.Fail()
@@ -108,10 +128,12 @@ func jinFile1All(b *testing.B) {
 	}
 }
 
-func jinFileManyFew(b *testing.B, f testfile) {
+func jinFileManyFew(b *testing.B, f testfile, useStruct bool) {
 	defer func() { _ = f.handle.Close() }()
 
 	b.ResetTimer()
+	var err error
+	var l = getEmptyPartialLog()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.handle.Seek(0, 0)
 		buf := bufio.NewScanner(f.handle)
@@ -120,7 +142,14 @@ func jinFileManyFew(b *testing.B, f testfile) {
 			obj := jin.New(buf.Bytes())
 			whatval, _ := obj.GetString("what")
 			whereval, _ := obj.GetInt("where", "0", "line")
-			err := checkLog(whatval, int(whereval))
+
+			if useStruct {
+				l.What = whatval
+				l.Where[0].Line = int(whereval)
+				err = checkLogStruct(l)
+			} else {
+				err = checkLog(whatval, int(whereval))
+			}
 			if err != nil {
 				benchErr = err
 				b.Fail()

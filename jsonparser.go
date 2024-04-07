@@ -16,24 +16,35 @@ import (
 var jsonparserPkg = pkg{
 	name: "jsonparser",
 	calls: map[string]*call{
-		"single-few-keys": {name: "Unmarshal", fun: jsonparserFile1Few},
+		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsonparserFile1Few(b, false)
+		}},
+		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsonparserFile1Few(b, true)
+		}, caveat: true},
 		"single-all-keys": {name: "Unmarshal", fun: jsonparserFile1All},
 		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsonparserFileManyFew(b, smallTestFile())
+			jsonparserFileManyFew(b, smallTestFile(), false)
 		}},
+		"small-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsonparserFileManyFew(b, smallTestFile(), true)
+		}, caveat: true},
 		"small-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			jsonparserFileManyAll(b, smallTestFile())
 		}},
 		"large-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
-			jsonparserFileManyFew(b, largeTestFile())
+			jsonparserFileManyFew(b, largeTestFile(), false)
 		}},
+		"large-file-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
+			jsonparserFileManyFew(b, largeTestFile(), true)
+		}, caveat: true},
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			jsonparserFileManyAll(b, largeTestFile())
 		}},
 	},
 }
 
-func jsonparserFile1Few(b *testing.B) {
+func jsonparserFile1Few(b *testing.B, useStruct bool) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed to read %s. %s\n", filename, err)
@@ -46,11 +57,12 @@ func jsonparserFile1Few(b *testing.B) {
 		{"deceasedBoolean"},
 	}
 	b.ResetTimer()
+	var p = getEmptyPartialPatient()
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
 		var strval string
-		var arrval int
+		var arrval []string
 		var boolval bool
 		jsonparser.EachKey(j, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
 			switch idx {
@@ -58,13 +70,21 @@ func jsonparserFile1Few(b *testing.B) {
 				strval = string(value)
 			case 1:
 				jsonparser.ArrayEach(value, func(val []byte, vt jsonparser.ValueType, offset int, err error) {
-					arrval++
+					arrval = append(arrval, string(val))
 				})
 			case 3:
 				boolval = vt == jsonparser.Boolean
 			}
 		}, paths...)
-		err = checkPatient(strval, arrval, boolval)
+
+		if useStruct {
+			p.Identifier[0].Type.Coding[0].Code = strval
+			p.Name[0].Given = arrval
+			p.DeceasedBoolean = boolval
+			err = checkPatientStruct(p)
+		} else {
+			err = checkPatient(strval, len(arrval), boolval)
+		}
 		if err != nil {
 			benchErr = err
 			b.Fail()
@@ -121,13 +141,15 @@ func jsonparserVisitChildren(key []byte, value []byte, vt jsonparser.ValueType, 
 	return nil
 }
 
-func jsonparserFileManyFew(b *testing.B, f testfile) {
+func jsonparserFileManyFew(b *testing.B, f testfile, useStruct bool) {
 	paths := [][]string{
 		{"what"},
 		{"where", "[0]", "line"},
 	}
+	var err error
 	var whatval string
 	var whereval int64
+	var l = getEmptyPartialLog()
 	jsonparserCheckFileValues(b, f.handle, f.numRecords, func(j []byte) {
 		jsonparser.EachKey(j, func(idx int, value []byte, vt jsonparser.ValueType, err error) {
 			switch idx {
@@ -137,7 +159,14 @@ func jsonparserFileManyFew(b *testing.B, f testfile) {
 				whereval, _ = jsonparser.ParseInt(value)
 			}
 		}, paths...)
-		err := checkLog(whatval, int(whereval))
+
+		if useStruct {
+			l.What = whatval
+			l.Where[0].Line = int(whereval)
+			err = checkLogStruct(l)
+		} else {
+			err = checkLog(whatval, int(whereval))
+		}
 		if err != nil {
 			benchErr = err
 			b.Fail()
