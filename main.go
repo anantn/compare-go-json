@@ -121,6 +121,7 @@ func main() {
 		&sonicPkg,
 		&sonicValidatePkg,
 		&codecPkg,
+		&jinPkg,
 	}
 	for _, s := range []*suite{
 		{fun: "validate-bytes", title: "Validate []byte", ref: "json"},

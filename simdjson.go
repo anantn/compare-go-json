@@ -54,6 +54,7 @@ func simdjsonFile1All(b *testing.B) {
 			benchErr = err
 			b.Fail()
 		}
+		// Includes root object
 		if simdjsonVisitCount != singleNumChildren+1 {
 			benchErr = fmt.Errorf("expected %d children but got %d", singleNumChildren, simdjsonVisitCount)
 			b.Fail()
@@ -160,6 +161,7 @@ func simdjsonFileManyAll(b *testing.B, t testfile) {
 				if err := simdjsonVisitChildren(i); err != nil {
 					return err
 				}
+				// Includes root object
 				if simdjsonVisitCount != t.numChildren+1 {
 					return fmt.Errorf("expected %d children but got %d", t.numChildren, simdjsonVisitCount)
 				}
