@@ -1,4 +1,4 @@
-module github.com/ohler55/go-json-benchmarks
+module github.com/anantn/go-json-benchmarks
 
 go 1.21
 
@@ -15,6 +15,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/minio/simdjson-go v0.4.5
 	github.com/ohler55/ojg v1.21.4
+	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
 	github.com/segmentio/encoding v0.4.0
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/sjson v1.2.5
