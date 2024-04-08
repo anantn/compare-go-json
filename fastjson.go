@@ -46,7 +46,7 @@ var fastjsonPkg = pkg{
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			fastjsonFileManyAll(b, largeTestFile())
 		}},
-		"marshal-builder": {name: "Marshal", fun: fastjsonMarshalBuilder, caveat: true},
+		"marshal-builder": {name: "Marshal", fun: fastjsonMarshalBuilder},
 	},
 }
 

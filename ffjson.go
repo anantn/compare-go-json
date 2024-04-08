@@ -33,7 +33,7 @@ var ffjsonPkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			ffjsonFileManyAll(b, openLargeLogFile())
 		}},
-		"marshal-builder": {name: "Marshal", fun: ffjsonMarshalBuilder},
+		"marshal-builder": {name: "Marshal", fun: ffjsonMarshalBuilder, caveat: true},
 	},
 }
 
