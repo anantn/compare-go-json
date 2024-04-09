@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -13,7 +14,21 @@ import (
 )
 
 var easyjsonPkg = pkg{
-	name: "easyjson",
+	name:               "easyjson",
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		if i, ok := v.(easyjson.Unmarshaler); ok {
+			return easyjson.Unmarshal(data, i)
+		}
+		return fmt.Errorf("easyjson: Unmarshal only supports easyjson.Unmarshaler")
+	},
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		if i, ok := v.(easyjson.Marshaler); ok {
+			return easyjson.Marshal(i)
+		}
+		return nil, fmt.Errorf("easyjson: Marshal only supports easyjson.Marshaler")
+	},
 	calls: map[string]*call{
 		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			easyjsonFile1Few(b)

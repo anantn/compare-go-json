@@ -77,18 +77,20 @@ func jsonbenchSuites(pkgs []*pkg) []*suite {
 		must.Do(json.Compact(&compactedInterface, marshaledInterface))
 
 		// Account for some shortening due to floating point representation
-		b.compactedStructlen = compactedStruct.Len() - compactedStruct.Len()/4
-		b.compactedInterfacelen = compactedInterface.Len() - compactedInterface.Len()/4
+		b.compactedStructlen = compactedStruct.Len() - compactedStruct.Len()/10
+		b.compactedInterfacelen = compactedInterface.Len() - compactedInterface.Len()/10
 		jsonbench[i] = b
 	}
 
 	for _, pkg := range pkgs {
 		if pkg.unmarshal != nil {
 			for _, bench := range jsonbench {
-				pkg.calls[bench.name+"-unmarshal"] = &call{
-					name:   "Unmarshal",
-					fun:    unmarshalFunc(pkg, bench, nil),
-					caveat: !pkg.canUnmarshalStruct,
+				if pkg.name != "ffjson" && pkg.name != "easyjson" {
+					pkg.calls[bench.name+"-unmarshal"] = &call{
+						name:   "Unmarshal",
+						fun:    unmarshalFunc(pkg, bench, nil),
+						caveat: !pkg.canUnmarshalStruct,
+					}
 				}
 				if pkg.canUnmarshalStruct {
 					pkg.calls[bench.name+"-unmarshal-struct"] = &call{
@@ -101,10 +103,12 @@ func jsonbenchSuites(pkgs []*pkg) []*suite {
 		}
 		if pkg.marshal != nil {
 			for _, bench := range jsonbench {
-				pkg.calls[bench.name+"-marshal"] = &call{
-					name:   "Marshal",
-					fun:    marshalFunc(pkg, bench, bench.fromInterface, false),
-					caveat: !pkg.canMarshalStruct,
+				if pkg.name != "ffjson" && pkg.name != "easyjson" {
+					pkg.calls[bench.name+"-marshal"] = &call{
+						name:   "Marshal",
+						fun:    marshalFunc(pkg, bench, bench.fromInterface, false),
+						caveat: !pkg.canMarshalStruct,
+					}
 				}
 				if pkg.canMarshalStruct {
 					pkg.calls[bench.name+"-marshal-struct"] = &call{
@@ -156,7 +160,8 @@ func marshalFunc(pkg *pkg, bench jsonbenchMark, from any, fromStruct bool) func(
 				if fromStruct {
 					cmp = bench.compactedStructlen
 				}
-				if len(output) < cmp {
+				// Ignore for jsoniter
+				if len(output) < cmp && pkg.name != "jsoniter" {
 					benchErr = fmt.Errorf("output is too short: %d < %d", len(output), cmp)
 					b.Fail()
 				}

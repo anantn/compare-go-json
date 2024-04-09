@@ -13,7 +13,15 @@ import (
 )
 
 var ffjsonPkg = pkg{
-	name: "ffjson",
+	name:               "ffjson",
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		return ffjson.Unmarshal(data, v)
+	},
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		return ffjson.Marshal(v)
+	},
 	calls: map[string]*call{
 		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			ffjsonFile1Few(b)
