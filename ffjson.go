@@ -33,24 +33,7 @@ var ffjsonPkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			ffjsonFileManyAll(b, openLargeLogFile())
 		}},
-		"marshal-builder": {name: "Marshal", fun: ffjsonMarshalBuilder, caveat: true},
 	},
-}
-
-func ffjsonMarshalBuilder(b *testing.B) {
-	var data PartialLog
-	err := ffjson.Unmarshal([]byte(getSampleLog()), &data)
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = ffjson.Marshal(data); benchErr != nil {
-			b.Fail()
-		}
-	}
 }
 
 func ffjsonFile1Few(b *testing.B) {

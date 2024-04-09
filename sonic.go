@@ -19,7 +19,15 @@ import (
 var sonicShouldValidate bool
 
 var sonicPkg = pkg{
-	name: "sonic",
+	name:               "sonic",
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		return sonic.Unmarshal(data, v)
+	},
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		return sonic.Marshal(v)
+	},
 	calls: map[string]*call{
 		"validate-bytes":  {name: "Validate", fun: sonicValidate},
 		"validate-string": {name: "Validate", fun: sonicValidateString},

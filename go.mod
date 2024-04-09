@@ -1,6 +1,6 @@
 module github.com/anantn/go-json-benchmarks
 
-go 1.21
+go 1.22.0
 
 toolchain go1.22.1
 
@@ -13,6 +13,7 @@ require (
 	github.com/go-json-experiment/json v0.0.0-20231102232822-2e55bd4e08b0
 	github.com/goccy/go-json v0.10.2
 	github.com/json-iterator/go v1.1.12
+	github.com/mailru/easyjson v0.7.7
 	github.com/minio/simdjson-go v0.4.5
 	github.com/ohler55/ojg v1.21.4
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7
@@ -21,6 +22,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	github.com/ugorji/go/codec v1.2.12
 	github.com/valyala/fastjson v1.6.4
+	tailscale.com v1.62.1
 )
 
 require (
@@ -29,7 +31,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect

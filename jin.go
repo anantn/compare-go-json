@@ -16,6 +16,11 @@ import (
 
 var jinPkg = pkg{
 	name: "jin",
+	unmarshal: func(data []byte, v interface{}) error {
+		jinVisitCount = 0
+		jinValueHolder = nil
+		return jinIterate(data)
+	},
 	calls: map[string]*call{
 		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			jinFile1Few(b, false)

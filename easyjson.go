@@ -33,24 +33,7 @@ var easyjsonPkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			easyjsonFileManyAll(b, openLargeLogFile())
 		}},
-		"marshal-builder": {name: "Marshal", fun: easyjsonMarshalBuilder, caveat: true},
 	},
-}
-
-func easyjsonMarshalBuilder(b *testing.B) {
-	var data PartialLog
-	err := easyjson.Unmarshal([]byte(getSampleLog()), &data)
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = easyjson.Marshal(data); benchErr != nil {
-			b.Fail()
-		}
-	}
 }
 
 func easyjsonFile1Few(b *testing.B) {

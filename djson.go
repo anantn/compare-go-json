@@ -15,6 +15,14 @@ import (
 
 var djsonPkg = pkg{
 	name: "djson",
+	unmarshal: func(data []byte, v interface{}) error {
+		dec := djson.NewDecoder(data)
+		dec.AllocString()
+		if _, err := dec.DecodeObject(); err != nil {
+			return err
+		}
+		return nil
+	},
 	calls: map[string]*call{
 		"single-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			djsonFile1All(b)

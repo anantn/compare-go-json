@@ -15,7 +15,15 @@ import (
 
 var jsoni = jsoniter.ConfigFastest
 var jsoniterPkg = pkg{
-	name: "jsoniter",
+	name:               "jsoniter",
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		return jsoni.Unmarshal(data, v)
+	},
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		return jsoni.Marshal(v)
+	},
 	calls: map[string]*call{
 		"validate-bytes": {name: "Validate", fun: jsoniterValidate},
 		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
@@ -45,7 +53,6 @@ var jsoniterPkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			jsoniterFileManyAll(b, openLargeLogFile(), true)
 		}},
-		"marshal-builder": {name: "Marshal", fun: jsoniterMarshalBuilder},
 	},
 }
 
@@ -55,22 +62,6 @@ func jsoniterValidate(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		if !jsoniter.Valid(sample) {
 			benchErr = errors.New("JSON not valid")
-			b.Fail()
-		}
-	}
-}
-
-func jsoniterMarshalBuilder(b *testing.B) {
-	var data interface{}
-	err := jsoni.UnmarshalFromString(getSampleLog(), &data)
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = jsoni.Marshal(data); benchErr != nil {
 			b.Fail()
 		}
 	}

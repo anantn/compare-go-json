@@ -14,7 +14,15 @@ import (
 )
 
 var goccyPkg = pkg{
-	name: "goccy",
+	name:               "goccy",
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		return goccy.Unmarshal(data, v)
+	},
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		return goccy.Marshal(v)
+	},
 	calls: map[string]*call{
 		"validate-bytes": {name: "Validate", fun: goccyValidate},
 		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
@@ -44,7 +52,6 @@ var goccyPkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			goccyFileManyAll(b, openLargeLogFile(), true)
 		}},
-		"marshal-builder": {name: "Marshal", fun: goccyMarshalBuilder},
 	},
 }
 
@@ -54,22 +61,6 @@ func goccyValidate(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		if !goccy.Valid(sample) {
 			benchErr = errors.New("JSON not valid")
-			b.Fail()
-		}
-	}
-}
-
-func goccyMarshalBuilder(b *testing.B) {
-	var data interface{}
-	err := goccy.Unmarshal([]byte(getSampleLog()), &data)
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = goccy.Marshal(data); benchErr != nil {
 			b.Fail()
 		}
 	}

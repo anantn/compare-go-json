@@ -13,7 +13,15 @@ import (
 )
 
 var jsonPkg = pkg{
-	name: "json",
+	name:               "json",
+	canUnmarshalStruct: true,
+	unmarshal: func(b []byte, i interface{}) error {
+		return json.Unmarshal(b, i)
+	},
+	canMarshalStruct: true,
+	marshal: func(i interface{}) ([]byte, error) {
+		return json.Marshal(i)
+	},
 	calls: map[string]*call{
 		"validate-string": {name: "Validate", fun: goValidate},
 		"validate-bytes":  {name: "Validate", fun: goValidate},

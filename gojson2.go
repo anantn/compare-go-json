@@ -13,7 +13,15 @@ import (
 )
 
 var json2Pkg = pkg{
-	name: "json2",
+	name:               "json2",
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		return json2.Unmarshal(data, v)
+	},
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		return json2.Marshal(v)
+	},
 	calls: map[string]*call{
 		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			go2File1Few(b)
@@ -42,24 +50,7 @@ var json2Pkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			go2FileManyAll(b, openLargeLogFile(), true)
 		}},
-		"marshal-builder": {name: "Marshal", fun: go2MarshalBuilder},
 	},
-}
-
-func go2MarshalBuilder(b *testing.B) {
-	var data interface{}
-	err := json2.Unmarshal([]byte(getSampleLog()), &data)
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = json2.Marshal(data); benchErr != nil {
-			b.Fail()
-		}
-	}
 }
 
 func go2File1Few(b *testing.B) {

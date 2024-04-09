@@ -16,6 +16,15 @@ import (
 
 var fastjsonPkg = pkg{
 	name: "fastjson",
+	unmarshal: func(data []byte, v interface{}) error {
+		val, err := fastjson.ParseBytes(data)
+		if err != nil {
+			return nil
+		}
+		root, _ := val.Object()
+		root.Visit(fastjsonVisitChildren)
+		return err
+	},
 	calls: map[string]*call{
 		"validate-bytes":  {name: "Validate", fun: fastjsonValidate},
 		"validate-string": {name: "Validate", fun: fastjsonValidateString},
@@ -160,6 +169,8 @@ func fastjsonFile1All(b *testing.B) {
 				benchErr = fmt.Errorf("expected object, got %s", val.Type())
 				b.Fail()
 			}
+			fastjsonVisitCount = 0
+			fastjsonValueHolder = nil
 			root, _ := val.Object()
 			root.Visit(fastjsonVisitChildren)
 			if fastjsonVisitCount != singleNumChildren {
@@ -171,8 +182,7 @@ func fastjsonFile1All(b *testing.B) {
 				benchErr = fmt.Errorf("expected a value, got nil")
 				b.Fail()
 			}
-			fastjsonVisitCount = 0
-			fastjsonValueHolder = nil
+
 		}
 	}
 }
@@ -226,6 +236,8 @@ func fastjsonFileManyFew(b *testing.B, f testfile, useStruct bool) {
 
 func fastjsonFileManyAll(b *testing.B, f testfile) {
 	fastjsonCheckFileValues(b, f.handle, f.numRecords, func(val *fastjson.Value) {
+		fastjsonVisitCount = 0
+		fastjsonValueHolder = nil
 		obj, _ := val.Object()
 		obj.Visit(fastjsonVisitChildren)
 		if fastjsonVisitCount != f.numChildren {
@@ -237,8 +249,6 @@ func fastjsonFileManyAll(b *testing.B, f testfile) {
 			benchErr = fmt.Errorf("expected a value, got nil")
 			b.Fail()
 		}
-		fastjsonVisitCount = 0
-		fastjsonValueHolder = nil
 	})
 }
 

@@ -14,7 +14,15 @@ import (
 )
 
 var segmentPkg = pkg{
-	name: "segment",
+	name:               "segment",
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		return segment.Unmarshal(data, v)
+	},
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		return segment.Marshal(v)
+	},
 	calls: map[string]*call{
 		"validate-bytes": {name: "Validate", fun: segmentValidate},
 		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
@@ -44,7 +52,6 @@ var segmentPkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			segmentFileManyAll(b, openLargeLogFile(), true)
 		}},
-		"marshal-builder": {name: "Marshal", fun: segmentMarshalBuilder},
 	},
 }
 
@@ -54,22 +61,6 @@ func segmentValidate(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		if !segment.Valid(sample) {
 			benchErr = errors.New("JSON not valid")
-			b.Fail()
-		}
-	}
-}
-
-func segmentMarshalBuilder(b *testing.B) {
-	var data interface{}
-	err := segment.Unmarshal([]byte(getSampleLog()), &data)
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		if _, benchErr = segment.Marshal(data); benchErr != nil {
 			b.Fail()
 		}
 	}

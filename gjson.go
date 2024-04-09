@@ -20,6 +20,16 @@ var gjsonShouldValidate bool
 
 var gjsonPkg = pkg{
 	name: "gjson",
+	unmarshal: func(data []byte, v interface{}) error {
+		result := gjson.ParseBytes(data)
+		if !result.IsObject() {
+			return errors.New("expected object")
+		}
+		gjsonVisitCount = 0
+		gjsonValueHolder = nil
+		result.ForEach(gjsonVisitChildren)
+		return nil
+	},
 	calls: map[string]*call{
 		"validate-bytes":  {name: "Validate", fun: gjsonValidate},
 		"validate-string": {name: "Validate", fun: gjsonValidateString},
@@ -211,6 +221,8 @@ func gjsonFile1All(b *testing.B) {
 			benchErr = errors.New("expected object")
 			b.Fail()
 		} else {
+			gjsonVisitCount = 0
+			gjsonValueHolder = nil
 			result.ForEach(gjsonVisitChildren)
 			if gjsonVisitCount != singleNumChildren {
 				benchErr = fmt.Errorf("expected %d children, got %d",
@@ -221,8 +233,6 @@ func gjsonFile1All(b *testing.B) {
 				benchErr = fmt.Errorf("expected a value, got nil")
 				b.Fail()
 			}
-			gjsonVisitCount = 0
-			gjsonValueHolder = nil
 		}
 	}
 }
@@ -272,6 +282,8 @@ func gjsonFileManyFew(b *testing.B, f testfile, useStruct bool) {
 
 func gjsonFileManyAll(b *testing.B, f testfile) {
 	gjsonCheckFileValues(b, f.handle, f.numRecords, func(result gjson.Result) {
+		gjsonVisitCount = 0
+		gjsonValueHolder = nil
 		result.ForEach(gjsonVisitChildren)
 		if gjsonVisitCount != f.numChildren {
 			benchErr = fmt.Errorf("expected %d children, got %d",
@@ -282,8 +294,6 @@ func gjsonFileManyAll(b *testing.B, f testfile) {
 			benchErr = fmt.Errorf("expected a value, got nil")
 			b.Fail()
 		}
-		gjsonVisitCount = 0
-		gjsonValueHolder = nil
 	})
 }
 

@@ -14,6 +14,15 @@ import (
 
 var simdjsonPkg = pkg{
 	name: "simdjson",
+	unmarshal: func(data []byte, v interface{}) error {
+		pj, err := simdjson.Parse(data, nil)
+		if err != nil {
+			return err
+		}
+		simdjsonVisitCount = 0
+		simdjsonValueHolder = nil
+		return pj.ForEach(simdjsonVisitChildren)
+	},
 	calls: map[string]*call{
 		"single-all-keys": {name: "Unmarshal", fun: simdjsonFile1All},
 		"small-file-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {

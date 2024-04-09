@@ -80,8 +80,12 @@ type call struct {
 }
 
 type pkg struct {
-	name  string
-	calls map[string]*call
+	name               string
+	calls              map[string]*call
+	marshal            func(interface{}) ([]byte, error)
+	unmarshal          func([]byte, interface{}) error
+	canMarshalStruct   bool
+	canUnmarshalStruct bool
 }
 
 type result struct {
@@ -113,7 +117,7 @@ func main() {
 	pkgs := []*pkg{
 		&jsonPkg,
 		&json2Pkg,
-		&ojPkg,
+		//&ojPkg,
 		&fastjsonPkg,
 		&jsoniterPkg,
 		&jsonparserPkg,
@@ -125,12 +129,19 @@ func main() {
 		&sonicPkg,
 		&sonicValidatePkg,
 		&codecPkg,
-		&jinPkg,
-		&jasonPkg,
+		//&jinPkg,
+		//&jasonPkg,
 		&djsonPkg,
 		&ffjsonPkg,
 		&easyjsonPkg,
 	}
+
+	// Run standard jsonbench tests first
+	for _, s := range jsonbenchSuites(pkgs) {
+		s.exec(pkgs)
+	}
+
+	// Run custom tests
 	for _, s := range []*suite{
 		{fun: "single-few-keys", title: "Unmarshal single record (2kb), read few keys generically", ref: "json"},
 		{fun: "single-few-keys-struct", title: "Unmarshal single record (2kb), read few keys into struct", ref: "json"},

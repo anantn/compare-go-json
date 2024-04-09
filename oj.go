@@ -6,13 +6,20 @@ import (
 	"bufio"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/ohler55/ojg/oj"
 )
 
 var ojPkg = pkg{
-	name: "oj",
+	name:               "oj",
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		return oj.Unmarshal(data, v)
+	},
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		return []byte(oj.JSON(v)), nil
+	},
 	calls: map[string]*call{
 		"validate-bytes": {name: "Validate", fun: ojValidate},
 		// oj does not seem to work with anonymous structs like in PartialPatient
@@ -47,7 +54,6 @@ var ojPkg = pkg{
 		"large-file-all-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			ojFileManyAll(b, openLargeLogFile(), false)
 		}},
-		"marshal-builder": {name: "Builder", fun: ojMarshalBuilder},
 	},
 }
 
@@ -62,31 +68,6 @@ func ojValidate(b *testing.B) {
 	}
 }
 
-func ojMarshalBuilder(b *testing.B) {
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		var bu oj.Builder
-		_ = bu.Object()
-		_ = bu.Value(time.Now().UnixNano(), "when")
-		_ = bu.Value("Just some fake log entry for a generated log file.", "what")
-		_ = bu.Array("where")
-		_ = bu.Object()
-		_ = bu.Value("example.go", "file")
-		_ = bu.Value(123, "line")
-		bu.Pop()
-		bu.Pop()
-		_ = bu.Value("benchmark-application", "who")
-		_ = bu.Value("INFO", "level")
-		bu.PopAll()
-		entry := bu.Result()
-		if err := checkMarshalCustom(oj.JSON(entry)); err != nil {
-			benchErr = err
-			b.Fail()
-		}
-	}
-}
-
-/*
 func ojFile1Few(b *testing.B) {
 	sample, _ := os.ReadFile(filename)
 	ojp := oj.Parser{Reuse: true}
@@ -103,7 +84,6 @@ func ojFile1Few(b *testing.B) {
 		}
 	}
 }
-*/
 
 func ojFile1All(b *testing.B, useStruct bool) {
 	sample, _ := os.ReadFile(filename)

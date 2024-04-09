@@ -15,6 +15,12 @@ import (
 
 var jsonparserPkg = pkg{
 	name: "jsonparser",
+	unmarshal: func(data []byte, v interface{}) error {
+		jsonparserVisitCount = 0
+		jsonparserValueHolder = nil
+		jsonparser.ObjectEach(data, jsonparserVisitChildren)
+		return nil
+	},
 	calls: map[string]*call{
 		"single-few-keys": {name: "Unmarshal", fun: func(b *testing.B) {
 			jsonparserFile1Few(b, false)
@@ -103,6 +109,8 @@ func jsonparserFile1All(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, _ = f.Seek(0, 0)
 		j, _ := io.ReadAll(f)
+		jsonparserVisitCount = 0
+		jsonparserValueHolder = nil
 		jsonparser.ObjectEach(j, jsonparserVisitChildren)
 		if jsonparserVisitCount != singleNumChildren {
 			benchErr = fmt.Errorf("expected %d children, got %d",
@@ -113,8 +121,6 @@ func jsonparserFile1All(b *testing.B) {
 			benchErr = fmt.Errorf("expected a value, got nil")
 			b.Fail()
 		}
-		jsonparserVisitCount = 0
-		jsonparserValueHolder = nil
 	}
 }
 
@@ -176,8 +182,9 @@ func jsonparserFileManyFew(b *testing.B, f testfile, useStruct bool) {
 
 func jsonparserFileManyAll(b *testing.B, f testfile) {
 	jsonparserCheckFileValues(b, f.handle, f.numRecords, func(j []byte) {
+		jsonparserVisitCount = 0
+		jsonparserValueHolder = nil
 		jsonparser.ObjectEach(j, jsonparserVisitChildren)
-
 		if jsonparserVisitCount != f.numChildren {
 			benchErr = fmt.Errorf("expected %d children, got %d",
 				f.numChildren, jsonparserVisitCount)
@@ -187,8 +194,6 @@ func jsonparserFileManyAll(b *testing.B, f testfile) {
 			benchErr = fmt.Errorf("expected a value, got nil")
 			b.Fail()
 		}
-		jsonparserVisitCount = 0
-		jsonparserValueHolder = nil
 	})
 }
 

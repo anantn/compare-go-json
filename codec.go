@@ -15,7 +15,21 @@ import (
 var jsonHandle codec.Handle = new(codec.JsonHandle)
 
 var codecPkg = pkg{
-	name: "codec",
+	name:             "codec",
+	canMarshalStruct: true,
+	marshal: func(v interface{}) ([]byte, error) {
+		var output []byte
+		encoder := codec.NewEncoderBytes(&output, jsonHandle)
+		if err := encoder.Encode(v); err != nil {
+			return nil, err
+		}
+		return output, nil
+	},
+	canUnmarshalStruct: true,
+	unmarshal: func(data []byte, v interface{}) error {
+		decoder := codec.NewDecoderBytes(data, jsonHandle)
+		return decoder.Decode(v)
+	},
 	calls: map[string]*call{
 		"single-few-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			codecFile1Few(b)
@@ -44,27 +58,7 @@ var codecPkg = pkg{
 		"large-file-all-keys-struct": {name: "Unmarshal", fun: func(b *testing.B) {
 			codecFileManyAll(b, openLargeLogFile(), true)
 		}},
-		"marshal-builder": {name: "Marshal", fun: codecMarshalBuilder},
 	},
-}
-
-func codecMarshalBuilder(b *testing.B) {
-	var data interface{}
-	var decoder *codec.Decoder = codec.NewDecoderString(getSampleLog(), jsonHandle)
-	err := decoder.Decode(&data)
-	if err != nil {
-		benchErr = err
-		b.Fail()
-	}
-
-	b.ResetTimer()
-	var output = make([]byte, 0, 768)
-	var encoder = codec.NewEncoderBytes(&output, jsonHandle)
-	for n := 0; n < b.N; n++ {
-		if benchErr = encoder.Encode(data); benchErr != nil {
-			b.Fail()
-		}
-	}
 }
 
 func codecFile1Few(b *testing.B) {
