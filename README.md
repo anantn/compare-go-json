@@ -3,7 +3,454 @@
 Fork of [ohler55/compare-go-json](https://github.com/ohler55/compare-go-json),
 modified to focus on JSON file parsing with dynamic (unknown) schema.
 
-# Benchmarks
+# Results
+
+## x86_64 (Linux)
+
+### Unmarshaling
+```
+Unmarshal single record (2kb), read few keys generically
+        sonic ████████████████████▋ 5.19
+     fastjson ██████████████▉ 3.73
+   jsonparser ██████████████▍ 3.61
+      sonic-v ████████████▋ 3.18
+        gjson ████████████▏ 3.04
+      gjson-v ████████▏ 2.04
+         json ▓▓▓▓ 1.00
+Unmarshal single record (2kb), read few keys into struct
+   * fastjson ██████████████▊ 3.72
+ * jsonparser ██████████████▍ 3.62
+        sonic █████████████▎ 3.34
+        goccy █████████████▎ 3.32
+      * gjson ████████████  3.02
+        json2 ██████████▊ 2.69
+        codec ██████████▎ 2.58
+      sonic-v █████████▌ 2.40
+     jsoniter █████████▏ 2.30
+    * gjson-v ████████▎ 2.07
+      segment ███████  1.75
+     easyjson █████▍ 1.35
+       ffjson ████▋ 1.18
+         json ▓▓▓▓ 1.00
+Unmarshal single record (2kb), read all keys generically
+     fastjson ████████████▎ 3.08
+        djson ███████▋ 1.93
+        sonic ███████▌ 1.89
+        gjson ██████▉ 1.74
+   jsonparser ██████▊ 1.70
+      sonic-v ██████▍ 1.62
+      gjson-v █████▊ 1.46
+        goccy █████▌ 1.40
+     jsoniter █████▎ 1.33
+        json2 █████▏ 1.30
+     simdjson █████▏ 1.29
+         json ▓▓▓▓ 1.00
+        codec ███▎ 0.83
+      segment █▋ 0.41
+Unmarshal single record (2kb), read all keys into struct
+        sonic ███████████████▌ 3.89
+        goccy ██████████████  3.52
+      sonic-v ███████████  2.77
+     jsoniter ██████████▊ 2.71
+     easyjson █████████▎ 2.31
+        codec ████████▊ 2.22
+        json2 ████████▊ 2.21
+       ffjson ███████▌ 1.91
+      segment █████▏ 1.31
+         json ▓▓▓▓ 1.00
+
+Unmarshal many records (2kb each) from small file (100MB), read few keys generically
+        sonic ████████████████████████████████████████████████████▍ 13.12
+     simdjson ███████████████████████████████▏ 7.78
+   jsonparser ████████████████████████████▋ 7.17
+     fastjson ██████████████████████  5.53
+        gjson ████████████████████▊ 5.19
+      sonic-v ████████████████▏ 4.05
+      gjson-v ██████████▋ 2.68
+         json ▓▓▓▓ 1.00
+Unmarshal many records (2kb each) from small file (100MB), read few keys into struct
+   * simdjson ███████████████████████████████▉ 7.99
+ * jsonparser █████████████████████████████  7.27
+   * fastjson ██████████████████████▋ 5.66
+        goccy █████████████████████▋ 5.43
+      * gjson █████████████████████▏ 5.29
+        sonic █████████████████▏ 4.30
+        codec ████████████████▏ 4.03
+    * gjson-v ██████████▋ 2.68
+      sonic-v ██████████  2.51
+        json2 █████████▎ 2.34
+     jsoniter █████████  2.25
+      segment ████████▍ 2.12
+       ffjson ██████▊ 1.71
+     easyjson █████▎ 1.32
+         json ▓▓▓▓ 1.00
+Unmarshal many records (2kb each) from small file (100MB), read all keys generically
+     simdjson ██████████████████▎ 4.58
+     fastjson ██████████████▋ 3.68
+        djson ███████▉ 1.98
+        sonic ███████▊ 1.95
+        gjson ██████▋ 1.67
+      sonic-v ██████▍ 1.60
+   jsonparser ██████▎ 1.57
+      gjson-v █████▌ 1.40
+        goccy █████▎ 1.32
+     jsoniter ████▊ 1.20
+        json2 ████▋ 1.16
+         json ▓▓▓▓ 1.00
+        codec ██▊ 0.71
+      segment █▎ 0.32
+Unmarshal many records (2kb each) from small file (100MB), read all keys into struct
+        goccy ███████████████████▋ 4.91
+        sonic ██████████████████▋ 4.66
+     jsoniter ████████████▌ 3.14
+      sonic-v ████████████▏ 3.06
+     easyjson ██████████▌ 2.65
+        codec █████████▏ 2.28
+       ffjson ███████  1.77
+        json2 ██████▉ 1.75
+      segment ████▊ 1.22
+         json ▓▓▓▓ 1.00
+
+Unmarshal many records (25kb each) from semi-large file (5GB), read few keys generically
+        sonic ████████████████████████████████████████████████████████████████████████████████████████████████████████████████▌ 28.14
+     simdjson █████████████████████████████████████████████████████████████████▉ 16.49
+   jsonparser ███████████████████████████████████████▍ 9.85
+        gjson █████████████████████████▊ 6.46
+     fastjson █████████████████████████▏ 6.30
+      sonic-v ███████████████████▏ 4.79
+      gjson-v ███████████▌ 2.91
+         json ▓▓▓▓ 1.00
+Unmarshal many records (25kb each) from semi-large file (5GB), read few keys into struct
+   * simdjson █████████████████████████████████████████████████████████████████████████████▍ 19.37
+ * jsonparser ███████████████████████████████████████▍ 9.87
+      * gjson █████████████████████████▋ 6.41
+   * fastjson █████████████████████████▏ 6.31
+        goccy ████████████████████████  6.00
+        codec ███████████████████▉ 4.98
+        sonic ███████████████████  4.76
+    * gjson-v ███████████▍ 2.86
+      sonic-v ██████████▌ 2.63
+      segment █████████▊ 2.46
+        json2 █████████▏ 2.29
+     jsoniter █████████  2.25
+       ffjson ███████▊ 1.95
+     easyjson ████▊ 1.21
+         json ▓▓▓▓ 1.00
+Unmarshal many records from (25kb each) semi-large file (5GB), read all keys generically
+     simdjson █████████████████████▍ 5.36
+     fastjson ███████████████▊ 3.95
+        djson ███████▉ 1.99
+        sonic ███████▋ 1.93
+      sonic-v ██████▍ 1.61
+        gjson ██████▎ 1.58
+   jsonparser █████▉ 1.49
+      gjson-v █████▎ 1.32
+        goccy █████▏ 1.30
+        json2 ████▉ 1.22
+     jsoniter ████▊ 1.20
+         json ▓▓▓▓ 1.00
+        codec ██▋ 0.68
+      segment █▏ 0.31
+Unmarshal many records from (25kb each) semi-large file (5GB), read all keys into struct
+        goccy █████████████████████▎ 5.34
+        sonic ████████████████████▏ 5.05
+      sonic-v ████████████▌ 3.14
+     jsoniter ████████████▍ 3.10
+     easyjson ██████████▌ 2.65
+        codec █████████▎ 2.32
+       ffjson ███████▍ 1.86
+        json2 ██████▍ 1.61
+      segment ████▉ 1.25
+         json ▓▓▓▓ 1.00
+
+Unmarshal CanadaGeometry generically
+        sonic █████████▋ 2.43
+   * simdjson ███████  1.77
+ * jsonparser ██████▋ 1.68
+      * djson ██████▌ 1.65
+        json2 ████▉ 1.22
+        goccy ████▍ 1.12
+   * fastjson ████▏ 1.06
+         json ▓▓▓▓ 1.00
+      * gjson ███▎ 0.84
+        codec ███▎ 0.83
+     jsoniter ███  0.77
+      segment ██▍ 0.60
+Unmarshal CanadaGeometry into struct
+        sonic ████████████████████████▍ 6.11
+      segment ██████████▍ 2.60
+        goccy ██████████▏ 2.53
+     easyjson ████████▍ 2.11
+        codec ██████▍ 1.60
+        json2 █████▊ 1.46
+     jsoniter ████▋ 1.18
+         json ▓▓▓▓ 1.00
+       ffjson ███▏ 0.80
+
+Unmarshal CITMCatalog generically
+   * simdjson ███████████████████▉ 4.97
+        sonic ████████████▍ 3.10
+      * djson █████████▉ 2.49
+        json2 ████████▋ 2.17
+   * fastjson ████████▎ 2.08
+     jsoniter ███████▋ 1.91
+        goccy ██████▉ 1.74
+      * gjson ████▉ 1.23
+ * jsonparser ████▌ 1.14
+         json ▓▓▓▓ 1.00
+        codec ███▉ 0.99
+      segment █▋ 0.43
+Unmarshal CITMCatalog into struct
+        sonic ████████████████████████████████████▉ 9.24
+        goccy ██████████████████████████▍ 6.61
+     jsoniter █████████████████████▉ 5.49
+        codec ██████████████  3.51
+     easyjson ████████████▉ 3.22
+        json2 ████████████▋ 3.16
+      segment ████████▊ 2.21
+         json ▓▓▓▓ 1.00
+
+Unmarshal SyntheaFHIR generically
+   * simdjson ███████████████▌ 3.90
+        sonic ████████████▋ 3.16
+      * djson █████████▊ 2.45
+   * fastjson ███████▊ 1.97
+        json2 ███████▎ 1.83
+        goccy ██████▋ 1.68
+     jsoniter ██████▌ 1.63
+      * gjson ████▌ 1.15
+         json ▓▓▓▓ 1.00
+ * jsonparser ███▊ 0.96
+        codec ███▍ 0.85
+      segment ▉ 0.22
+Unmarshal SyntheaFHIR into struct
+        sonic ███████████████████████████  6.76
+        goccy █████████████████████▋ 5.42
+     jsoniter ███████████████▉ 3.98
+        codec ████████████▎ 3.09
+     easyjson ████████████▏ 3.04
+        json2 ██████████▏ 2.56
+      segment ██████  1.50
+         json ▓▓▓▓ 1.00
+       ffjson ██▎ 0.58
+
+Unmarshal TwitterStatus generically
+   * simdjson █████████████████▍ 4.37
+   * fastjson ████████████▋ 3.18
+        sonic ███████████▉ 2.98
+      * djson ████████▌ 2.15
+        goccy ██████▊ 1.72
+      * gjson ██████▋ 1.66
+        json2 ██████▍ 1.60
+     jsoniter ██████▎ 1.58
+ * jsonparser █████▊ 1.46
+         json ▓▓▓▓ 1.00
+        codec ███▋ 0.93
+      segment █▏ 0.30
+Unmarshal TwitterStatus into struct
+        sonic ███████████████████████████████▍ 7.86
+        goccy █████████████████████▏ 5.31
+     easyjson ██████████████████▎ 4.58
+     jsoniter ███████████████▊ 3.95
+        codec █████████████▎ 3.32
+        json2 ██████████▉ 2.73
+       ffjson ██████▋ 1.66
+      segment █████▍ 1.34
+         json ▓▓▓▓ 1.00
+
+Unmarshal GolangSource generically
+        sonic ██████████▍ 2.60
+      * djson ██████████▏ 2.54
+   * simdjson ████████▋ 2.18
+        json2 █████▋ 1.42
+     jsoniter ████▊ 1.20
+   * fastjson ████▊ 1.20
+        goccy ████▋ 1.17
+         json ▓▓▓▓ 1.00
+        codec ██▍ 0.61
+ * jsonparser █▌ 0.39
+      * gjson █▍ 0.36
+      segment █▏ 0.31
+Unmarshal GolangSource into struct
+        sonic █████████████████████████▋ 6.41
+        goccy ██████████████████████▋ 5.68
+      segment █████████████████████▊ 5.44
+     jsoniter ████████████▌ 3.14
+     easyjson ████████████  3.01
+        codec █████████▏ 2.31
+        json2 ███████▊ 1.96
+       ffjson ███████▍ 1.87
+         json ▓▓▓▓ 1.00
+
+Unmarshal StringUnicode generically
+   * fastjson █████████████████████████████████████████▊ 10.46
+        sonic ████████████████████████████████▍ 8.09
+ * jsonparser ██████████████████████████▋ 6.68
+      * gjson ███████████████████████▉ 5.97
+        goccy ███████████████▌ 3.89
+     jsoniter ███████████▋ 2.93
+        codec ██████████▍ 2.62
+        json2 ████████▋ 2.16
+   * simdjson ███████  1.78
+      * djson ██████▋ 1.67
+         json ▓▓▓▓ 1.00
+      segment ██▏ 0.54
+Unmarshal StringUnicode into struct
+        sonic █████████████████████████████████████████████████████████████████████████▉ 18.49
+     easyjson ██████████████████████████████████████████████████████▏ 13.53
+        goccy ████████████████████████▊ 6.20
+       ffjson █████████████████████▌ 5.41
+        codec █████████████████████▏ 5.30
+     jsoniter █████████████████  4.26
+        json2 ██████████▏ 2.55
+         json ▓▓▓▓ 1.00
+      segment ███▋ 0.92
+```
+
+### Marshaling
+```
+Marshal custom data through an object builder
+     fastjson ███████▋ 1.91
+        sonic █████▊ 1.45
+         json ▓▓▓▓ 1.00
+        gjson ██▌ 0.63
+
+Marshal CanadaGeometry generically
+     jsoniter █████████▉ 2.50
+        sonic █████████▉ 2.49
+      segment █████▊ 1.46
+        json2 █████▎ 1.32
+        goccy █████▏ 1.29
+        codec ████▉ 1.25
+         json ▓▓▓▓ 1.00
+Marshal CanadaGeometry from struct
+     jsoniter ████████████████▎ 4.07
+        sonic █████████▍ 2.35
+     easyjson ████▌ 1.14
+      segment ████▌ 1.13
+        goccy ████▍ 1.11
+        json2 ████  1.00
+         json ▓▓▓▓ 1.00
+        codec ███▍ 0.85
+       ffjson ██  0.52
+
+Marshal CITMCatalog generically
+        sonic █████████████▍ 3.36
+        json2 █████████▊ 2.44
+      segment █████████▍ 2.35
+        codec ███████▎ 1.82
+        goccy ███████  1.78
+     jsoniter ██████▋ 1.66
+         json ▓▓▓▓ 1.00
+Marshal CITMCatalog from struct
+        sonic ██████████▉ 2.72
+        goccy ███████▌ 1.88
+      segment ██████▏ 1.54
+     easyjson █████▌ 1.40
+     jsoniter █████▏ 1.29
+         json ▓▓▓▓ 1.00
+       ffjson ██▊ 0.69
+        json2 ██▋ 0.66
+        codec ██▌ 0.63
+
+Marshal SyntheaFHIR generically
+        sonic ███████████▊ 2.96
+        json2 █████████▍ 2.36
+        codec █████████▏ 2.29
+      segment ████████▋ 2.19
+     jsoniter ██████▊ 1.72
+        goccy █████▊ 1.44
+         json ▓▓▓▓ 1.00
+Marshal SyntheaFHIR from struct
+        sonic ██████████▍ 2.62
+      segment ██████████  2.53
+     easyjson ████████▎ 2.07
+        goccy ███████▊ 1.94
+     jsoniter █████▉ 1.48
+       ffjson █████▎ 1.34
+        codec ████▍ 1.09
+        json2 ████  1.02
+         json ▓▓▓▓ 1.00
+
+Marshal TwitterStatus generically
+        sonic ████████████████▍ 4.11
+        json2 ██████████▊ 2.70
+     jsoniter ██████████▌ 2.64
+        codec █████████▌ 2.38
+      segment ███████  1.76
+        goccy █████▎ 1.32
+         json ▓▓▓▓ 1.00
+Marshal TwitterStatus from struct
+        sonic ██████████████▊ 3.71
+        goccy ██████  1.50
+      segment █████▊ 1.46
+     easyjson ████▋ 1.17
+         json ▓▓▓▓ 1.00
+     jsoniter ███▊ 0.95
+       ffjson ███  0.78
+        json2 ██▉ 0.73
+        codec ██▏ 0.55
+
+Marshal GolangSource generically
+        sonic ██████████████████  4.52
+     jsoniter ██████████▎ 2.57
+        json2 ██████████▎ 2.56
+      segment ████████▎ 2.09
+        codec ███████▍ 1.87
+        goccy █████▌ 1.39
+         json ▓▓▓▓ 1.00
+Marshal GolangSource from struct
+        sonic ███████████▋ 2.91
+      segment ██████▏ 1.56
+        goccy ██████▏ 1.53
+     jsoniter █████▋ 1.43
+     easyjson █████  1.28
+         json ▓▓▓▓ 1.00
+        json2 ██▉ 0.74
+        codec ██▎ 0.57
+       ffjson ██  0.52
+
+Marshal StringUnicode generically
+        sonic ██████████████████████████████████  8.52
+     jsoniter █████████▏ 2.29
+      segment ████▉ 1.22
+        goccy ████▊ 1.22
+        codec ████▌ 1.15
+        json2 ████▎ 1.07
+         json ▓▓▓▓ 1.00
+Marshal StringUnicode from struct
+        sonic ███████████████████████████████▉ 7.97
+     jsoniter ██████▍ 1.62
+     easyjson ████▋ 1.17
+        goccy ████▎ 1.08
+        json2 ████▎ 1.08
+      segment ████  1.02
+         json ▓▓▓▓ 1.00
+       ffjson ███▊ 0.95
+        codec ███  0.77
+```
+
+### Validation
+```
+Validate []byte
+        sonic █████████████▏ 3.31
+        gjson ██████████▉ 2.73
+     fastjson █████████▋ 2.43
+      segment █████▉ 1.48
+     jsoniter █████▊ 1.46
+         json ▓▓▓▓ 1.00
+        goccy █▌ 0.40
+
+Validate string
+        sonic ██████████▋ 2.67
+        gjson █████████▍ 2.36
+     fastjson ████████▎ 2.06
+         json ▓▓▓▓ 1.00
+```
+
+# Raw Benchmark Data
+
+Outputs are also available as CSV in the repository.
 
 ## x86_64 (Linux)
 ```
