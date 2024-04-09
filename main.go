@@ -183,7 +183,23 @@ func main() {
 	fmt.Println()
 }
 
+func getLogFile() *os.File {
+	// create or open benchmarks.csv
+	f, err := os.OpenFile("benchmarks.csv", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("Failed to open benchmarks.csv. %s\n", err)
+	}
+	// write header if file is empty
+	if fi, err := f.Stat(); err == nil && fi.Size() == 0 {
+		_, _ = f.WriteString("package,operation,test,ns/op,b/op,allocs/op,caveat\n")
+	}
+	return f
+}
+
 func (s *suite) exec(pkgs []*pkg) {
+	f := getLogFile()
+	defer func() { _ = f.Close() }()
+
 	fmt.Println()
 	fmt.Println(s.title)
 	var results []*result
@@ -240,6 +256,9 @@ func (s *suite) exec(pkgs []*pkg) {
 			caveat = "* "
 		}
 		fmt.Printf(" %12s %s %3.2f\n", caveat+r.pkg, bar, x)
+		_, _ = fmt.Fprintf(f, "%s,%s,%s,%d,%d,%d,%t\n",
+			r.pkg, strings.ToLower(c.name), strings.ToLower(s.fun),
+			c.ns, c.bytes, c.allocs, c.caveat)
 	}
 }
 
