@@ -83,6 +83,9 @@ func jsonbenchSuites(pkgs []*pkg) []*suite {
 	}
 
 	for _, pkg := range pkgs {
+		if len(pkg.calls) == 0 {
+			continue
+		}
 		if pkg.unmarshal != nil {
 			for _, bench := range jsonbench {
 				if pkg.name != "ffjson" && pkg.name != "easyjson" {
