@@ -134,6 +134,7 @@ func main() {
 		&djsonPkg,
 		&ffjsonPkg,
 		&easyjsonPkg,
+		&sonnetPkg,
 	}
 
 	// Run standard jsonbench tests first
